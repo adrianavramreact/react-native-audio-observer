@@ -13,7 +13,7 @@ internal const val EVENT_AUDIO_ROUTE = "audioRoute"
 internal fun isEventSupported(event: String, sdkInt: Int): Boolean = when (event) {
   EVENT_CALL -> sdkInt >= Build.VERSION_CODES.S
   EVENT_OTHER_AUDIO -> sdkInt >= Build.VERSION_CODES.O
-  EVENT_AUDIO_ROUTE -> sdkInt >= Build.VERSION_CODES.M
+  EVENT_AUDIO_ROUTE -> sdkInt >= Build.VERSION_CODES.TIRAMISU
   else -> false
 }
 

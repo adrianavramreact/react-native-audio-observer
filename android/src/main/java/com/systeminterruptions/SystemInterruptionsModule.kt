@@ -1,5 +1,6 @@
 package com.systeminterruptions
 import android.annotation.SuppressLint
+import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -27,6 +28,13 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   private var modeListener: AudioManager.OnModeChangedListener? = null
 
   private var lastRoutes = listOf<String>()
+  private var routeModeListener: AudioManager.OnModeChangedListener? = null
+  private val mediaAttributes = AudioAttributes.Builder()
+    .setUsage(AudioAttributes.USAGE_MEDIA)
+    .build()
+  private val callAttributes = AudioAttributes.Builder()
+    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+    .build()
   private val deviceCallback = DeviceCallback()
 
   @RequiresApi(Build.VERSION_CODES.O)
@@ -86,18 +94,25 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   // Added and removed only report the difference, so both read the full list again.
   inner class DeviceCallback : AudioDeviceCallback() {
     override fun onAudioDevicesAdded(addedDevices: Array<AudioDeviceInfo>) {
-      onDevicesChanged()
+      onRoutesChanged()
     }
 
     override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) {
-      onDevicesChanged()
+      onRoutesChanged()
     }
   }
 
-  private fun currentRoutes(): List<String> =
-    routesFromDeviceTypes(audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).map { it.type })
+  // Devices sound would play on now, not every connected output: the call route during
+  // a phone or video call, the media route otherwise.
+  // API level is checked by isEventSupported before each call.
+  @SuppressLint("NewApi")
+  private fun currentRoutes(): List<String> {
+    val inCall = callFromMode(audioManager.mode) == "connected"
+    val attributes = if (inCall) callAttributes else mediaAttributes
+    return routesFromDeviceTypes(audioManager.getAudioDevicesForAttributes(attributes).map { it.type })
+  }
 
-  private fun onDevicesChanged() {
+  private fun onRoutesChanged() {
     val routes = currentRoutes()
     if (routes == lastRoutes) return
     lastRoutes = routes
@@ -108,13 +123,21 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
 
   // Save the current list before registering: a change in between still arrives,
   // because registering calls onAudioDevicesAdded with the connected devices.
+  // The mode listener is here too: a call moves the route without any device change.
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   private fun startAudioRoute() {
     lastRoutes = currentRoutes()
     audioManager.registerAudioDeviceCallback(deviceCallback, null)
+    val listener = AudioManager.OnModeChangedListener { onRoutesChanged() }
+    audioManager.addOnModeChangedListener(reactApplicationContext.mainExecutor, listener)
+    routeModeListener = listener
   }
 
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   private fun stopAudioRoute() {
     audioManager.unregisterAudioDeviceCallback(deviceCallback)
+    routeModeListener?.let { audioManager.removeOnModeChangedListener(it) }
+    routeModeListener = null
   }
 
   // API levels are checked by isEventSupported before each call.
@@ -173,6 +196,10 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   // Only reads; it does not change lastRoutes, so it never affects events.
   override fun getAudioRoutesAsync(promise: Promise) {
     try {
+      if (!isEventSupported(EVENT_AUDIO_ROUTE, Build.VERSION.SDK_INT)) {
+        promise.reject("ERR_UNSUPPORTED", "getAudioRoutesAsync requires Android API 33+")
+        return
+      }
       promise.resolve(Arguments.fromList(currentRoutes()))
     } catch (e: Exception) {
       promise.reject("ERR_GET_AUDIO_ROUTES", e)

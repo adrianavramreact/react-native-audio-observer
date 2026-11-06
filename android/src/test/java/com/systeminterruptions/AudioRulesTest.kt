@@ -63,9 +63,9 @@ class AudioRulesTest {
   }
 
   @Test
-  fun isEventSupported_audioRoute_needsApi23() {
-    assertTrue(isEventSupported(EVENT_AUDIO_ROUTE, 23))
-    assertFalse(isEventSupported(EVENT_AUDIO_ROUTE, 22))
+  fun isEventSupported_audioRoute_needsApi33() {
+    assertTrue(isEventSupported(EVENT_AUDIO_ROUTE, 33))
+    assertFalse(isEventSupported(EVENT_AUDIO_ROUTE, 32))
   }
 
   @Test
