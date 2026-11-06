@@ -118,6 +118,11 @@
     "jsSrcsDir": "src",
     "android": {
       "javaPackageName": "com.systeminterruptions"
+    },
+    "ios": {
+      "modulesProvider": {
+        "SystemInterruptions": "RCTSystemInterruptions"
+      }
     }
   },
   "prettier": {
