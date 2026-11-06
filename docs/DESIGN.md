@@ -34,7 +34,7 @@ useSystemInterruptions(): {
 |---|---|---|---|
 | `call` | `'ringing' \| 'connected' \| 'ended'` | `CXCallObserver` | `AudioManager` mode: `RINGTONE` → ringing, `IN_CALL` / `IN_COMMUNICATION` → connected, back to `NORMAL` → ended |
 | `audioInterruption` | `{ state: 'began' \| 'ended', shouldResume?: boolean }` | `AVAudioSession.interruptionNotification` | not emitted |
-| `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker')[] }` | `AVAudioSession.routeChangeNotification` | `AudioDeviceCallback` |
+| `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker' \| 'unknown')[] }` | `AVAudioSession.routeChangeNotification` | `AudioDeviceCallback`, mode listener, `getAudioDevicesForAttributes` |
 | `otherAudio` | `'started' \| 'stopped'` | `AVAudioSession.isOtherAudioPlaying`, foreground only | `AudioPlaybackCallback` |
 
 Rules shared by all events:
@@ -51,9 +51,10 @@ Rules shared by all events:
 
 | API | `audioRoute` events | `otherAudio` events | `call` events | `isOtherAudioPlayingAsync()` |
 |---|---|---|---|---|
-| 31+ | supported | supported | supported | supported |
-| 26–30 | supported | supported | unsupported | supported |
-| 24–25 | supported | unsupported | unsupported | unsupported |
+| 33+ | supported | supported | supported | supported |
+| 31–32 | unsupported | supported | supported | supported |
+| 26–30 | unsupported | supported | unsupported | supported |
+| 24–25 | unsupported | unsupported | unsupported | unsupported |
 
 ### Android: `otherAudio`
 
