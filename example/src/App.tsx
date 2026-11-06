@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Button,
   Text,
   View,
   StyleSheet,
   ScrollView,
-  ToastAndroid,
 } from 'react-native';
 import SystemInterruptions, {
   addListener,
@@ -42,43 +42,25 @@ export default function App() {
   const checkAvailable = async () => {
     const call = await SystemInterruptions.isAvailableAsync('call');
     const otherAudio = await SystemInterruptions.isAvailableAsync('otherAudio');
-    ToastAndroid.show(
-      `call: ${call}, otherAudio: ${otherAudio}`,
-      ToastAndroid.SHORT
-    );
+    Alert.alert('isAvailable', `call: ${call}, otherAudio: ${otherAudio}`);
   };
 
   const checkInCall = () => {
     SystemInterruptions.isInCallAsync()
-      .then((inCall) =>
-        ToastAndroid.show(`isInCall: ${inCall}`, ToastAndroid.SHORT)
-      )
-      .catch((e) =>
-        ToastAndroid.show(`${e.code}: ${e.message}`, ToastAndroid.LONG)
-      );
+      .then((inCall) => Alert.alert('isInCall', String(inCall)))
+      .catch((e) => Alert.alert(e.code, e.message));
   };
 
   const checkOtherAudio = () => {
     SystemInterruptions.isOtherAudioPlayingAsync()
-      .then((playing) =>
-        ToastAndroid.show(`isOtherAudioPlaying: ${playing}`, ToastAndroid.SHORT)
-      )
-      .catch((e) =>
-        ToastAndroid.show(`${e.code}: ${e.message}`, ToastAndroid.LONG)
-      );
+      .then((playing) => Alert.alert('isOtherAudioPlaying', String(playing)))
+      .catch((e) => Alert.alert(e.code, e.message));
   };
 
   const checkAudioRoutes = () => {
     SystemInterruptions.getAudioRoutesAsync()
-      .then((routes) =>
-        ToastAndroid.show(
-          `audioRoutes: ${routes.join(', ')}`,
-          ToastAndroid.SHORT
-        )
-      )
-      .catch((e) =>
-        ToastAndroid.show(`${e.code}: ${e.message}`, ToastAndroid.LONG)
-      );
+      .then((routes) => Alert.alert('audioRoutes', routes.join(', ')))
+      .catch((e) => Alert.alert(e.code, e.message));
   };
 
   return (
