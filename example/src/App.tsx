@@ -14,6 +14,8 @@ import SystemInterruptions, {
   type OtherAudioEvent,
 } from 'react-native-system-interruptions';
 
+const formatRoutes = (routes: AudioRoute[]) => routes.join(', ') || 'unknown';
+
 export default function App() {
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const [otherAudioEvents, setOtherAudioEvents] = useState<OtherAudioEvent[]>(
@@ -59,7 +61,7 @@ export default function App() {
 
   const checkAudioRoutes = () => {
     SystemInterruptions.getAudioRoutesAsync()
-      .then((routes) => Alert.alert('audioRoutes', routes.join(', ')))
+      .then((routes) => Alert.alert('audioRoutes', formatRoutes(routes)))
       .catch((e) => Alert.alert(e.code, e.message));
   };
 
@@ -86,7 +88,7 @@ export default function App() {
       <Text style={styles.title}>audioRoute</Text>
       <ScrollView style={styles.list}>
         {routeEvents.map((routes, i) => (
-          <Text key={i}>{routes.join(', ')}</Text>
+          <Text key={i}>{formatRoutes(routes)}</Text>
         ))}
       </ScrollView>
     </View>
@@ -98,6 +100,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     paddingTop: 64,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 18,
