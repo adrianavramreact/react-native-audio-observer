@@ -79,9 +79,9 @@ class AudioRulesTest {
   }
 
   @Test
-  fun routeFromDeviceType_otherType_isIgnored() {
-    assertNull(routeFromDeviceType(AudioDeviceInfo.TYPE_HDMI))
-    assertNull(routeFromDeviceType(AudioDeviceInfo.TYPE_DOCK))
+  fun routeFromDeviceType_otherType_isUnknown() {
+    assertEquals("unknown", routeFromDeviceType(AudioDeviceInfo.TYPE_HDMI))
+    assertEquals("unknown", routeFromDeviceType(AudioDeviceInfo.TYPE_DOCK))
   }
 
   @Test

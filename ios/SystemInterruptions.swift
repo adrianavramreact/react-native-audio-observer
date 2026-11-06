@@ -18,7 +18,7 @@ import AVFoundation
   // Sorted so two lists with the same routes are equal when compared.
   public func currentRoutes() -> [String] {
     let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
-    return Array(Set(outputs.compactMap { output in route(for: output.portType) })).sorted()
+    return Set(outputs.map { output in route(for: output.portType) }).sorted()
   }
 
   public func startObserving(_ event: String) -> Bool {
@@ -67,7 +67,7 @@ import AVFoundation
     onAudioRouteChange(routes)
   }
 
-  private func route(for port: AVAudioSession.Port) -> String? {
+  private func route(for port: AVAudioSession.Port) -> String {
     switch port {
     case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
       return "bluetooth"
@@ -76,7 +76,7 @@ import AVFoundation
     case .builtInSpeaker, .builtInReceiver:
       return "speaker"
     default:
-      return nil
+      return "unknown"
     }
   }
 }

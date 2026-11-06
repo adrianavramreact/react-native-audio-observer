@@ -4,7 +4,7 @@ import {
   type TurboModule,
 } from 'react-native';
 
-export type AudioRoute = 'bluetooth' | 'wired' | 'speaker';
+export type AudioRoute = 'bluetooth' | 'wired' | 'speaker' | 'unknown';
 
 export type CallEvent = 'ringing' | 'connected' | 'ended';
 export type AudioInterruptionEvent = {

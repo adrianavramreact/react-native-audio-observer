@@ -27,9 +27,9 @@ internal fun callFromMode(mode: Int): String? = when (mode) {
 }
 
 // Newer TYPE_* constants are plain ints; on older devices they simply never match.
-// Only bluetooth, wired and speaker; other types are not reported.
+// Bluetooth, wired and speaker are named; any other type is reported as unknown.
 @SuppressLint("InlinedApi")
-internal fun routeFromDeviceType(type: Int): String? = when (type) {
+internal fun routeFromDeviceType(type: Int): String = when (type) {
   AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
   AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
   AudioDeviceInfo.TYPE_BLE_HEADSET,
@@ -45,12 +45,12 @@ internal fun routeFromDeviceType(type: Int): String? = when (type) {
   AudioDeviceInfo.TYPE_AUX_LINE -> "wired"
   AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
   AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "speaker"
-  else -> null
+  else -> "unknown"
 }
 
 // Sorted so two lists with the same routes are equal when compared.
 internal fun routesFromDeviceTypes(types: List<Int>): List<String> =
-  types.mapNotNull { routeFromDeviceType(it) }.distinct().sorted()
+  types.map { routeFromDeviceType(it) }.distinct().sorted()
 
 internal fun isOtherAudio(usage: Int, contentType: Int): Boolean {
   if (usage == AudioAttributes.USAGE_VOICE_COMMUNICATION) return false
