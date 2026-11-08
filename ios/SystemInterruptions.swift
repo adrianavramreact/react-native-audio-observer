@@ -2,12 +2,15 @@ import AVFoundation
 
 @objcMembers public class SystemInterruptions: NSObject {
   private let onAudioRouteChange: ([String]) -> Void
+  // NotificationCenter needs an OperationQueue; this one runs on the module's serial queue.
+  private let notificationQueue = OperationQueue()
 
   private var routeObserver: NSObjectProtocol?
   private var lastRoutes: [String] = []
 
-  public init(onAudioRouteChange: @escaping ([String]) -> Void) {
+  public init(queue: DispatchQueue, onAudioRouteChange: @escaping ([String]) -> Void) {
     self.onAudioRouteChange = onAudioRouteChange
+    notificationQueue.underlyingQueue = queue
     super.init()
   }
 
@@ -43,11 +46,11 @@ import AVFoundation
   private func startAudioRoute() {
     guard routeObserver == nil else { return }
     lastRoutes = currentRoutes()
-    // Main queue so notifications run one at a time and never touch lastRoutes together.
+    // Same serial queue as the module methods.
     routeObserver = NotificationCenter.default.addObserver(
       forName: AVAudioSession.routeChangeNotification,
       object: nil,
-      queue: .main
+      queue: notificationQueue
     ) { [weak self] _ in
       self?.onRouteChanged()
     }

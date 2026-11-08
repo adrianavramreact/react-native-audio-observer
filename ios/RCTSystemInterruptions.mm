@@ -8,12 +8,15 @@
 
 @implementation RCTSystemInterruptions {
     SystemInterruptions *impl;
+    // Methods and audio notifications share this serial queue.
+    dispatch_queue_t queue;
 }
 
 - (id)init {
     if (self = [super init]) {
+        queue = dispatch_queue_create("com.systeminterruptions.queue", DISPATCH_QUEUE_SERIAL);
         __weak RCTSystemInterruptions *weakSelf = self;
-        impl = [[SystemInterruptions alloc] initOnAudioRouteChange:^(NSArray<NSString *> *routes) {
+        impl = [[SystemInterruptions alloc] initWithQueue:queue onAudioRouteChange:^(NSArray<NSString *> *routes) {
             [weakSelf emitOnAudioRoute:@{@"routes": routes}];
         }];
     }
@@ -24,25 +27,31 @@
                     resolve:(RCTPromiseResolveBlock)resolve
                      reject:(RCTPromiseRejectBlock)reject
 {
-    if ([impl startObserving:event]) {
-        resolve(nil);
-    } else {
-        reject(@"ERR_UNSUPPORTED", [NSString stringWithFormat:@"%@ is not supported on iOS yet", event], nil);
-    }
+    dispatch_async(queue, ^{
+        if ([self->impl startObserving:event]) {
+            resolve(nil);
+        } else {
+            reject(@"ERR_UNSUPPORTED", [NSString stringWithFormat:@"%@ is not supported on iOS yet", event], nil);
+        }
+    });
 }
 
 - (void)stopObservingAsync:(NSString *)event
                    resolve:(RCTPromiseResolveBlock)resolve
                     reject:(RCTPromiseRejectBlock)reject
 {
-    [impl stopObserving:event];
-    resolve(nil);
+    dispatch_async(queue, ^{
+        [self->impl stopObserving:event];
+        resolve(nil);
+    });
 }
 
 - (void)getAudioRoutesAsync:(RCTPromiseResolveBlock)resolve
                      reject:(RCTPromiseRejectBlock)reject
 {
-    resolve([impl currentRoutes]);
+    dispatch_async(queue, ^{
+        resolve([self->impl currentRoutes]);
+    });
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
