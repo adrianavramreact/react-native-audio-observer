@@ -1,6 +1,6 @@
 # ADR-004: No `shouldResume` in `audioInterruption`
 
-- Status: Accepted
+- Status: Superseded by ADR-005
 - Date: 2026-11-08
 
 ## Decision
