@@ -27,12 +27,14 @@ Stop and report if you find:
 
 ## 4. Commit message
 - Propose a [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) message in English: `type(scope): subject` (≤ 72 characters), scope e.g. `ios`, `android`, `js`, `docs`, `plugin`.
-- Short body: *what* and *why*.
+- Body: 1–2 short lines in plain everyday English, *what* and *why* only.
+  No technical detail (queues, threads, API names) unless it is the point of the change.
+  Example: "From iOS 27 it needs a second code path, and iOS 26 can't be retested on a real iPhone after the upgrade."
 - If the change is user-visible, mention `CHANGELOG.md`; if it is an architecture decision, mention `docs/adr/`.
 - End with the attribution line required by the session (e.g. `Co-Authored-By: ...`).
 
 ## 5. Confirm and commit
-- Show: branch, file list, `git diff --cached --stat` summary, proposed message.
+- Show briefly: branch, files (one line each, what changed in a few words), proposed message.
 - Wait for an explicit "yes". Only then `git commit` with the message via heredoc.
 - After the commit: `git log -1 --stat`.
 
