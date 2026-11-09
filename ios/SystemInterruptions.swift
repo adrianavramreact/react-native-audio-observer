@@ -1,21 +1,48 @@
 import AVFoundation
+import CallKit
 
-@objcMembers public class SystemInterruptions: NSObject {
+@objcMembers public class SystemInterruptions: NSObject, CXCallObserverDelegate {
+  private let queue: DispatchQueue
   private let onAudioRouteChange: ([String]) -> Void
-  // NotificationCenter needs an OperationQueue; this one runs on the module's serial queue.
+  private let onCallChange: (String) -> Void
   private let notificationQueue = OperationQueue()
 
   private var routeObserver: NSObjectProtocol?
   private var lastRoutes: [String] = []
 
-  public init(queue: DispatchQueue, onAudioRouteChange: @escaping ([String]) -> Void) {
+  // Lazy so it is created only when call state is first used.
+  private lazy var callObserver = CXCallObserver()
+  private var isObservingCalls = false
+  private var lastCall = "none"
+
+  public init(
+    queue: DispatchQueue,
+    onAudioRouteChange: @escaping ([String]) -> Void,
+    onCallChange: @escaping (String) -> Void
+  ) {
+    self.queue = queue
     self.onAudioRouteChange = onAudioRouteChange
+    self.onCallChange = onCallChange
     notificationQueue.underlyingQueue = queue
     super.init()
   }
 
   deinit {
     stopAudioRoute()
+    stopCall()
+  }
+
+  // If you are on a call and another one rings, you are still "connected".
+  public func currentCall() -> String {
+    let activeCalls = callObserver.calls.filter { call in
+      !call.hasEnded
+    }
+    let hasConnectedCall = activeCalls.contains { call in
+      call.hasConnected || call.isOutgoing
+    }
+    if hasConnectedCall { return "connected" }
+    if !activeCalls.isEmpty { return "ringing" }
+    return "none"
   }
 
   // Sorted so two lists with the same routes are equal when compared.
@@ -28,6 +55,8 @@ import AVFoundation
     switch event {
     case "audioRoute":
       startAudioRoute()
+    case "call":
+      startCall()
     default:
       return false
     }
@@ -38,6 +67,8 @@ import AVFoundation
     switch event {
     case "audioRoute":
       stopAudioRoute()
+    case "call":
+      stopCall()
     default:
       break
     }
@@ -46,7 +77,6 @@ import AVFoundation
   private func startAudioRoute() {
     guard routeObserver == nil else { return }
     lastRoutes = currentRoutes()
-    // Same serial queue as the module methods.
     routeObserver = NotificationCenter.default.addObserver(
       forName: AVAudioSession.routeChangeNotification,
       object: nil,
@@ -68,6 +98,33 @@ import AVFoundation
     if routes == lastRoutes { return }
     lastRoutes = routes
     onAudioRouteChange(routes)
+  }
+
+  // Subscribe first, then read the state, so no call change is missed in between.
+  private func startCall() {
+    guard !isObservingCalls else { return }
+    callObserver.setDelegate(self, queue: queue)
+    isObservingCalls = true
+    lastCall = currentCall()
+  }
+
+  private func stopCall() {
+    guard isObservingCalls else { return }
+    callObserver.setDelegate(nil, queue: nil)
+    isObservingCalls = false
+  }
+
+  // Called by iOS when a call rings, connects or ends.
+  public func callObserver(_: CXCallObserver, callChanged _: CXCall) {
+    onCallChanged()
+  }
+
+  // Checks all calls, not just the changed one: ending one call while another is still on is not "ended".
+  private func onCallChanged() {
+    let state = currentCall()
+    if state == lastCall { return }
+    lastCall = state
+    onCallChange(state == "none" ? "ended" : state)
   }
 
   private func route(for port: AVAudioSession.Port) -> String {

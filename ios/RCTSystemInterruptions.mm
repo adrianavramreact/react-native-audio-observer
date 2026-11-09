@@ -1,4 +1,6 @@
 #import "RCTSystemInterruptions.h"
+// The Swift header below declares CXCallObserverDelegate, so CallKit must come first.
+#import <CallKit/CallKit.h>
 
 #if __has_include(<SystemInterruptions/SystemInterruptions-Swift.h>)
 #import <SystemInterruptions/SystemInterruptions-Swift.h>
@@ -8,7 +10,6 @@
 
 @implementation RCTSystemInterruptions {
     SystemInterruptions *impl;
-    // Methods and audio notifications share this serial queue.
     dispatch_queue_t queue;
 }
 
@@ -16,9 +17,13 @@
     if (self = [super init]) {
         queue = dispatch_queue_create("com.systeminterruptions.queue", DISPATCH_QUEUE_SERIAL);
         __weak RCTSystemInterruptions *weakSelf = self;
-        impl = [[SystemInterruptions alloc] initWithQueue:queue onAudioRouteChange:^(NSArray<NSString *> *routes) {
-            [weakSelf emitOnAudioRoute:@{@"routes": routes}];
-        }];
+        impl = [[SystemInterruptions alloc] initWithQueue:queue
+            onAudioRouteChange:^(NSArray<NSString *> *routes) {
+                [weakSelf emitOnAudioRoute:@{@"routes": routes}];
+            }
+            onCallChange:^(NSString *state) {
+                [weakSelf emitOnCall:state];
+            }];
     }
     return self;
 }
@@ -43,6 +48,14 @@
     dispatch_async(queue, ^{
         [self->impl stopObserving:event];
         resolve(nil);
+    });
+}
+
+- (void)isInCallAsync:(RCTPromiseResolveBlock)resolve
+               reject:(RCTPromiseRejectBlock)reject
+{
+    dispatch_async(queue, ^{
+        resolve(@([[self->impl currentCall] isEqualToString:@"connected"]));
     });
 }
 

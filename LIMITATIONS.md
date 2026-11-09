@@ -5,6 +5,7 @@ Known platform limits of `react-native-system-interruptions`. See `docs/DESIGN.m
 ## iOS
 
 - **`otherAudio` is foreground only.** In the background the app is suspended, and the `audio` background mode is only allowed for real playback ([App Review 2.5.4](https://developer.apple.com/app-store/review/guidelines/#2.5.4)). The module never activates the audio session, so there is no notification; the value is read with [`isOtherAudioPlaying`](https://developer.apple.com/documentation/avfaudio/avaudiosession/isotheraudioplaying) when the app becomes active.
+- **`call` in the background is not reliable.** iOS freezes the app soon after it leaves the screen, and while it is frozen events may not arrive. To know if there is a call right now, use `isInCallAsync()`.
 
 ## Android
 
