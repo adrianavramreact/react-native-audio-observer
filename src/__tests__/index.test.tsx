@@ -10,7 +10,6 @@ jest.mock('../NativeSystemInterruptions', () => {
       startObservingAsync: jest.fn(() => Promise.resolve()),
       stopObservingAsync: jest.fn(() => Promise.resolve()),
       onCall: jest.fn(sub),
-      onAudioInterruption: jest.fn(sub),
       onAudioRoute: jest.fn(sub),
       onOtherAudio: jest.fn(sub),
     },

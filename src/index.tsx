@@ -3,21 +3,13 @@ import type { EventSubscription } from 'react-native';
 import type {
   AudioRoute,
   CallEvent,
-  AudioInterruptionEvent,
   AudioRouteEvent,
   OtherAudioEvent,
 } from './NativeSystemInterruptions';
 
-export type {
-  AudioRoute,
-  CallEvent,
-  AudioInterruptionEvent,
-  AudioRouteEvent,
-  OtherAudioEvent,
-};
+export type { AudioRoute, CallEvent, AudioRouteEvent, OtherAudioEvent };
 type EventMap = {
   call: CallEvent;
-  audioInterruption: AudioInterruptionEvent;
   audioRoute: AudioRouteEvent;
   otherAudio: OtherAudioEvent;
 };
@@ -67,10 +59,6 @@ function subscribe<K extends keyof EventMap>(
   switch (eventName) {
     case 'call':
       return SystemInterruptions.onCall(listener as (event: CallEvent) => void);
-    case 'audioInterruption':
-      return SystemInterruptions.onAudioInterruption(
-        listener as (event: AudioInterruptionEvent) => void
-      );
     case 'audioRoute':
       return SystemInterruptions.onAudioRoute(
         listener as (event: AudioRouteEvent) => void

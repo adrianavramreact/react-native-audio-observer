@@ -11,7 +11,6 @@ isAvailableAsync(event): Promise<boolean>
 // Native observing starts with the first listener of an event and stops when the last one is removed.
 // Call .remove() on the returned subscription to unsubscribe.
 addListener('call', (e: CallEvent) => void): EventSubscription
-addListener('audioInterruption', (e: AudioInterruptionEvent) => void): EventSubscription
 addListener('audioRoute', (e: AudioRouteEvent) => void): EventSubscription
 addListener('otherAudio', (e: OtherAudioEvent) => void): EventSubscription
 
@@ -33,7 +32,6 @@ useSystemInterruptions(): {
 | Event | Payload | iOS source | Android source |
 |---|---|---|---|
 | `call` | `'ringing' \| 'connected' \| 'ended'` | `CXCallObserver` | `AudioManager` mode: `RINGTONE` → ringing, `IN_CALL` / `IN_COMMUNICATION` → connected, back to `NORMAL` → ended |
-| `audioInterruption` | `{ state: 'began' \| 'ended', shouldResume?: boolean }` | `AVAudioSession.interruptionNotification` | not emitted |
 | `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker' \| 'unknown')[] }` | `AVAudioSession.routeChangeNotification` | `AudioDeviceCallback`, mode listener, `getAudioDevicesForAttributes` |
 | `otherAudio` | `'started' \| 'stopped'` | `AVAudioSession.isOtherAudioPlaying`, foreground only | `AudioPlaybackCallback` |
 
@@ -77,7 +75,7 @@ Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored.
 - Never records or reads audio content.
 - Does not say **which app** is playing or calling.
 - Does not distinguish GSM from VoIP calls in the public API.
-- Does not emit `otherAudio` on iOS while in the background, or `audioInterruption` on Android.
+- Does not emit `otherAudio` on iOS while in the background.
 - Collects and sends no data. Whatever the app does with the events is the app's responsibility.
 
 ## Open questions

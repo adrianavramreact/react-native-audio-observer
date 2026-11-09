@@ -2,7 +2,7 @@
 
 TurboModule (iOS + Android) that **only observes** system interruptions. It never requests audio focus, never activates the iOS audio session, and never reads phone numbers or audio content.
 
-- Events: `call` (ringing / connected / ended), `audioInterruption` (began / ended + `shouldResume`), `audioRoute` (bluetooth / wired / speaker), `otherAudio` (started / stopped).
+- Events: `call` (ringing / connected / ended), `audioRoute` (bluetooth / wired / speaker), `otherAudio` (started / stopped).
 - Use cases: media apps (pause/resume, debugging breadcrumbs), anti-fraud (active call during a transfer), online exams (call or headphones during the exam).
 
 ## Decisions already made

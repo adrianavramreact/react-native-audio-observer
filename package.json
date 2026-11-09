@@ -1,7 +1,7 @@
 {
   "name": "react-native-system-interruptions",
   "version": "0.1.0",
-  "description": "Observe-only system interruptions for React Native (calls, audio interruptions, audio route, other audio) on iOS and Android",
+  "description": "Observe-only system interruptions for React Native (calls, audio route, other audio) on iOS and Android",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
