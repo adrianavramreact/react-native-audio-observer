@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
+  Platform,
   Text,
   View,
   StyleSheet,
@@ -67,9 +68,14 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Button title="isAvailable" onPress={checkAvailable} />
+      {/* TODO: show on iOS once isAvailableAsync and isOtherAudioPlayingAsync exist there. */}
+      {Platform.OS === 'android' && (
+        <Button title="isAvailable" onPress={checkAvailable} />
+      )}
       <Button title="isInCall" onPress={checkInCall} />
-      <Button title="isOtherAudioPlaying" onPress={checkOtherAudio} />
+      {Platform.OS === 'android' && (
+        <Button title="isOtherAudioPlaying" onPress={checkOtherAudio} />
+      )}
       <Button title="getAudioRoutes" onPress={checkAudioRoutes} />
       <Text style={styles.title}>call</Text>
       <ScrollView style={styles.list}>
