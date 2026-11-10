@@ -23,6 +23,9 @@
             }
             onCallChange:^(NSString *state) {
                 [weakSelf emitOnCall:state];
+            }
+            onOtherAudioChange:^(NSString *state) {
+                [weakSelf emitOnOtherAudio:state];
             }];
     }
     return self;
@@ -36,7 +39,7 @@
         if ([self->impl startObserving:event]) {
             resolve(nil);
         } else {
-            reject(@"ERR_UNSUPPORTED", [NSString stringWithFormat:@"%@ is not supported on iOS yet", event], nil);
+            reject(@"ERR_UNSUPPORTED", [NSString stringWithFormat:@"%@ is not supported on iOS", event], nil);
         }
     });
 }
@@ -48,6 +51,21 @@
     dispatch_async(queue, ^{
         [self->impl stopObserving:event];
         resolve(nil);
+    });
+}
+
+- (void)isAvailableAsync:(NSString *)event
+                 resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject
+{
+    resolve(@([impl isAvailable:event]));
+}
+
+- (void)isOtherAudioPlayingAsync:(RCTPromiseResolveBlock)resolve
+                          reject:(RCTPromiseRejectBlock)reject
+{
+    dispatch_async(queue, ^{
+        resolve(@([self->impl isOtherAudioPlaying]));
     });
 }
 
