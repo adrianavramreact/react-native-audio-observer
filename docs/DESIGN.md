@@ -12,18 +12,21 @@ isAvailableAsync(event): Promise<boolean>
 // Call .remove() on the returned subscription to unsubscribe.
 addListener('call', (e: CallEvent) => void): EventSubscription
 addListener('audioRoute', (e: AudioRouteEvent) => void): EventSubscription
-addListener('otherAudio', (e: OtherAudioEvent) => void): EventSubscription
+addListener('otherAudio', (e: OtherAudioEvent) => void): EventSubscription       // iOS only
+addListener('mediaPlayback', (e: MediaPlaybackEvent) => void): EventSubscription // Android only
 
 // Current state, for the moment a screen mounts (listeners never send an initial value).
 isInCallAsync(): Promise<boolean>
 getAudioRoutesAsync(): Promise<AudioRoute[]>
-isOtherAudioPlayingAsync(): Promise<boolean>
+isOtherAudioPlayingAsync(): Promise<boolean>    // iOS only, rejects ERR_UNSUPPORTED on Android
+isMediaPlaybackActiveAsync(): Promise<boolean>  // Android only, rejects ERR_UNSUPPORTED on iOS
 
 // React hook built on the above; cleans up on unmount.
 useSystemInterruptions(): {
   call: CallState
   audioRoute: AudioRoute
-  otherAudio: OtherAudioState
+  otherAudio: OtherAudioState | 'unsupported'
+  mediaPlayback: MediaPlaybackState | 'unsupported'
 }
 ```
 
@@ -33,7 +36,8 @@ useSystemInterruptions(): {
 |---|---|---|---|
 | `call` | `'ringing' \| 'connected' \| 'ended'` | `CXCallObserver` | `AudioManager` mode: `RINGTONE` → ringing, `IN_CALL` / `IN_COMMUNICATION` → connected, back to `NORMAL` → ended |
 | `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker' \| 'unknown')[] }` | `AVAudioSession.routeChangeNotification` | `AudioDeviceCallback`, mode listener, `getAudioDevicesForAttributes` |
-| `otherAudio` | `'started' \| 'stopped'` | `AVAudioSession.isOtherAudioPlaying`, foreground only | `AudioPlaybackCallback` |
+| `otherAudio` | `'started' \| 'stopped'` | `AVAudioSession.isOtherAudioPlaying`, read when the app becomes active | not available (ADR-006) |
+| `mediaPlayback` | `'started' \| 'stopped'` | not available (ADR-006) | `AudioPlaybackCallback` |
 
 Rules shared by all events:
 - An event is sent **only when the normalized value changes**. Native callbacks fire many times for one user action (the spike saw 7 callbacks for one YouTube resume of a 10+ hour video), so the native side keeps the last value and drops repeats.
@@ -47,25 +51,25 @@ Rules shared by all events:
 
 ### Android: API levels
 
-| API | `audioRoute` events | `otherAudio` events | `call` events | `isOtherAudioPlayingAsync()` |
+| API | `audioRoute` events | `mediaPlayback` events | `call` events | `isMediaPlaybackActiveAsync()` |
 |---|---|---|---|---|
 | 33+ | supported | supported | supported | supported |
 | 31–32 | unsupported | supported | supported | supported |
 | 26–30 | unsupported | supported | unsupported | supported |
 | 24–25 | unsupported | unsupported | unsupported | unsupported |
 
-### Android: `otherAudio`
+### Android: `mediaPlayback`
 
 `started` when at least one active player matches:
 - `contentType` is `MUSIC`, `MOVIE` or `SPEECH`, and `usage` is not `VOICE_COMMUNICATION`; or
 - `contentType` is `UNKNOWN` and `usage` is `MEDIA` (Spotify reports this).
 
-Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored.
+Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored. Your app's own players count too: Android does not say which app owns a player.
 
 ### iOS: `otherAudio`
 
 - **Foreground only.** In the background the app is suspended, and the `audio` background mode is only allowed for real playback (App Review 2.5.4).
-- There is no notification without an active audio session, so the native side reads `isOtherAudioPlaying` when the app becomes active (`UIApplication.didBecomeActiveNotification`). Polling while in the foreground (e.g. music started from Control Center) is still undecided.
+- There is no notification without an active audio session, so the native side reads `isOtherAudioPlaying` when the app becomes active (`UIApplication.didBecomeActiveNotification`). There is no polling while the app stays on screen; use `isOtherAudioPlayingAsync()` to check at any moment.
 - To verify on a device: `isOtherAudioPlaying` is correct without an active session.
 
 ## What the module does not do
@@ -76,6 +80,7 @@ Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored.
 - Does not say **which app** is playing or calling.
 - Does not distinguish GSM from VoIP calls in the public API.
 - Does not emit `otherAudio` on iOS while in the background.
+- Does not report `otherAudio` on Android or `mediaPlayback` on iOS (ADR-006).
 - Collects and sends no data. Whatever the app does with the events is the app's responsibility.
 
 ## Open questions

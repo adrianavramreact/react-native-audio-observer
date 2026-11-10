@@ -69,6 +69,13 @@
     });
 }
 
+// iOS cannot see your own app's audio, so "any media playing" is Android only.
+- (void)isMediaPlaybackActiveAsync:(RCTPromiseResolveBlock)resolve
+                            reject:(RCTPromiseRejectBlock)reject
+{
+    reject(@"ERR_UNSUPPORTED", @"mediaPlayback is Android only. Use otherAudio on iOS.", nil);
+}
+
 - (void)isInCallAsync:(RCTPromiseResolveBlock)resolve
                reject:(RCTPromiseRejectBlock)reject
 {

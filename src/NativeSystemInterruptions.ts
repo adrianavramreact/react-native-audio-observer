@@ -9,6 +9,7 @@ export type AudioRoute = 'bluetooth' | 'wired' | 'speaker' | 'unknown';
 export type CallEvent = 'ringing' | 'connected' | 'ended';
 export type AudioRouteEvent = { routes: AudioRoute[] };
 export type OtherAudioEvent = 'started' | 'stopped';
+export type MediaPlaybackEvent = 'started' | 'stopped';
 
 export interface Spec extends TurboModule {
   startObservingAsync(event: string): Promise<void>;
@@ -18,10 +19,12 @@ export interface Spec extends TurboModule {
   isInCallAsync(): Promise<boolean>;
   getAudioRoutesAsync(): Promise<AudioRoute[]>;
   isOtherAudioPlayingAsync(): Promise<boolean>;
+  isMediaPlaybackActiveAsync(): Promise<boolean>;
 
   readonly onCall: CodegenTypes.EventEmitter<CallEvent>;
   readonly onAudioRoute: CodegenTypes.EventEmitter<AudioRouteEvent>;
   readonly onOtherAudio: CodegenTypes.EventEmitter<OtherAudioEvent>;
+  readonly onMediaPlayback: CodegenTypes.EventEmitter<MediaPlaybackEvent>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('SystemInterruptions');

@@ -16,7 +16,7 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
     reactApplicationContext.getSystemService(AudioManager::class.java)
   }
 
-  private var lastOtherAudio = false
+  private var lastMediaPlayback = false
   // Lazy because AudioPlaybackCallback needs API 26 and minSdk is 24: creating it
   // with the module would crash on API 24-25. DeviceCallback needs only API 23.
   @delegate:RequiresApi(Build.VERSION_CODES.O)
@@ -45,26 +45,26 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   }
 
   @RequiresApi(Build.VERSION_CODES.O)
-  private fun isOtherAudioPlaying(configs: List<AudioPlaybackConfiguration>): Boolean =
-    configs.any { isOtherAudio(it.audioAttributes.usage, it.audioAttributes.contentType) }
+  private fun isMediaPlaybackActive(configs: List<AudioPlaybackConfiguration>): Boolean =
+    configs.any { isMediaPlayback(it.audioAttributes.usage, it.audioAttributes.contentType) }
 
   @RequiresApi(Build.VERSION_CODES.O)
   private fun onPlayersChanged(configs: List<AudioPlaybackConfiguration>) {
-    val otherAudio = isOtherAudioPlaying(configs)
-    if (otherAudio != lastOtherAudio) {
-      lastOtherAudio = otherAudio
-      emitOnOtherAudio(if (otherAudio) "started" else "stopped")
+    val mediaPlayback = isMediaPlaybackActive(configs)
+    if (mediaPlayback != lastMediaPlayback) {
+      lastMediaPlayback = mediaPlayback
+      emitOnMediaPlayback(if (mediaPlayback) "started" else "stopped")
     }
   }
 
   @RequiresApi(Build.VERSION_CODES.O)
-  private fun startOtherAudio() {
+  private fun startMediaPlayback() {
     audioManager.registerAudioPlaybackCallback(playbackCallback, null)
-    lastOtherAudio = isOtherAudioPlaying(audioManager.activePlaybackConfigurations)
+    lastMediaPlayback = isMediaPlaybackActive(audioManager.activePlaybackConfigurations)
   }
 
   @RequiresApi(Build.VERSION_CODES.O)
-  private fun stopOtherAudio() {
+  private fun stopMediaPlayback() {
     audioManager.unregisterAudioPlaybackCallback(playbackCallback)
   }
 
@@ -144,12 +144,12 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   @SuppressLint("NewApi")
   override fun startObservingAsync(event: String, promise: Promise) {
     if (!isEventSupported(event, Build.VERSION.SDK_INT)) {
-      promise.reject("ERR_UNSUPPORTED", "$event is not supported on this Android version")
+      promise.reject("ERR_UNSUPPORTED", "$event is not supported on this device")
       return
     }
     try {
       when (event) {
-        EVENT_OTHER_AUDIO -> startOtherAudio()
+        EVENT_MEDIA_PLAYBACK -> startMediaPlayback()
         EVENT_CALL -> startCall()
         EVENT_AUDIO_ROUTE -> startAudioRoute()
       }
@@ -167,7 +167,7 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
     }
     try {
       when (event) {
-        EVENT_OTHER_AUDIO -> stopOtherAudio()
+        EVENT_MEDIA_PLAYBACK -> stopMediaPlayback()
         EVENT_CALL -> stopCall()
         EVENT_AUDIO_ROUTE -> stopAudioRoute()
       }
@@ -207,16 +207,21 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
   }
 
   @SuppressLint("NewApi")
-  override fun isOtherAudioPlayingAsync(promise: Promise) {
+  override fun isMediaPlaybackActiveAsync(promise: Promise) {
     try {
-      if (!isEventSupported(EVENT_OTHER_AUDIO, Build.VERSION.SDK_INT)) {
-        promise.reject("ERR_UNSUPPORTED", "isOtherAudioPlayingAsync requires Android API 26+")
+      if (!isEventSupported(EVENT_MEDIA_PLAYBACK, Build.VERSION.SDK_INT)) {
+        promise.reject("ERR_UNSUPPORTED", "isMediaPlaybackActiveAsync requires Android API 26+")
         return
       }
-      promise.resolve(isOtherAudioPlaying(audioManager.activePlaybackConfigurations))
+      promise.resolve(isMediaPlaybackActive(audioManager.activePlaybackConfigurations))
     } catch (e: Exception) {
-      promise.reject("ERR_IS_OTHER_AUDIO_PLAYING", e)
+      promise.reject("ERR_IS_MEDIA_PLAYBACK_ACTIVE", e)
     }
+  }
+
+  // In the current setup (no permissions), Android cannot tell which app is playing, so "other app" audio is iOS only.
+  override fun isOtherAudioPlayingAsync(promise: Promise) {
+    promise.reject("ERR_UNSUPPORTED", "otherAudio is iOS only. Use mediaPlayback on Android.")
   }
   companion object {
     const val NAME = NativeSystemInterruptionsSpec.NAME

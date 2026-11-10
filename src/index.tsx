@@ -5,13 +5,23 @@ import type {
   CallEvent,
   AudioRouteEvent,
   OtherAudioEvent,
+  MediaPlaybackEvent,
 } from './NativeSystemInterruptions';
 
-export type { AudioRoute, CallEvent, AudioRouteEvent, OtherAudioEvent };
+export type {
+  AudioRoute,
+  CallEvent,
+  AudioRouteEvent,
+  OtherAudioEvent,
+  MediaPlaybackEvent,
+};
 type EventMap = {
   call: CallEvent;
   audioRoute: AudioRouteEvent;
+  // iOS only: audio from another app.
   otherAudio: OtherAudioEvent;
+  // Android only: any media playing, your app's included.
+  mediaPlayback: MediaPlaybackEvent;
 };
 // Number of active listeners per event. Native observing runs only while it is > 0.
 const counts: Partial<Record<keyof EventMap, number>> = {};
@@ -67,6 +77,10 @@ function subscribe<K extends keyof EventMap>(
       return SystemInterruptions.onOtherAudio(
         listener as (event: OtherAudioEvent) => void
       );
+    case 'mediaPlayback':
+      return SystemInterruptions.onMediaPlayback(
+        listener as (event: MediaPlaybackEvent) => void
+      );
   }
 }
 export default {
@@ -75,5 +89,6 @@ export default {
   isInCallAsync: SystemInterruptions.isInCallAsync,
   getAudioRoutesAsync: SystemInterruptions.getAudioRoutesAsync,
   isOtherAudioPlayingAsync: SystemInterruptions.isOtherAudioPlayingAsync,
+  isMediaPlaybackActiveAsync: SystemInterruptions.isMediaPlaybackActiveAsync,
   addListener,
 };

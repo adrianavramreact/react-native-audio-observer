@@ -1,6 +1,6 @@
 # react-native-system-interruptions
 
-Observe-only system interruptions for React Native (calls, audio route, other audio) on iOS and Android
+Observe-only system interruptions for React Native (calls, audio route, other audio on iOS, media playback on Android) on iOS and Android
 
 ## Installation
 

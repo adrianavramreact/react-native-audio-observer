@@ -6,13 +6,13 @@ import android.media.AudioManager
 import android.os.Build
 
 internal const val EVENT_CALL = "call"
-internal const val EVENT_OTHER_AUDIO = "otherAudio"
+internal const val EVENT_MEDIA_PLAYBACK = "mediaPlayback"
 internal const val EVENT_AUDIO_ROUTE = "audioRoute"
 
 // Unknown event names are not supported.
 internal fun isEventSupported(event: String, sdkInt: Int): Boolean = when (event) {
   EVENT_CALL -> sdkInt >= Build.VERSION_CODES.S
-  EVENT_OTHER_AUDIO -> sdkInt >= Build.VERSION_CODES.O
+  EVENT_MEDIA_PLAYBACK -> sdkInt >= Build.VERSION_CODES.O
   EVENT_AUDIO_ROUTE -> sdkInt >= Build.VERSION_CODES.TIRAMISU
   else -> false
 }
@@ -52,7 +52,7 @@ internal fun routeFromDeviceType(type: Int): String = when (type) {
 internal fun routesFromDeviceTypes(types: List<Int>): List<String> =
   types.map { routeFromDeviceType(it) }.distinct().sorted()
 
-internal fun isOtherAudio(usage: Int, contentType: Int): Boolean {
+internal fun isMediaPlayback(usage: Int, contentType: Int): Boolean {
   if (usage == AudioAttributes.USAGE_VOICE_COMMUNICATION) return false
   return when (contentType) {
     AudioAttributes.CONTENT_TYPE_MUSIC,

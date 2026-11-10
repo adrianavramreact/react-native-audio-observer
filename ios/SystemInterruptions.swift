@@ -64,6 +64,7 @@ import UIKit
     AVAudioSession.sharedInstance().isOtherAudioPlaying
   }
 
+  // mediaPlayback is Android only.
   public func isAvailable(_ event: String) -> Bool {
     switch event {
     case "audioRoute", "call", "otherAudio":

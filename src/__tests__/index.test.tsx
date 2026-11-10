@@ -12,6 +12,7 @@ jest.mock('../NativeSystemInterruptions', () => {
       onCall: jest.fn(sub),
       onAudioRoute: jest.fn(sub),
       onOtherAudio: jest.fn(sub),
+      onMediaPlayback: jest.fn(sub),
     },
   };
 });
@@ -35,7 +36,7 @@ it('starts on the first listener and stops on the last remove', () => {
 });
 
 it('calling remove() twice stops only once', () => {
-  const a = addListener('otherAudio', () => {});
+  const a = addListener('audioRoute', () => {});
   a.remove();
   a.remove();
   expect(Native.stopObservingAsync).toHaveBeenCalledTimes(1);

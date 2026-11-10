@@ -12,24 +12,24 @@ import SystemInterruptions, {
   addListener,
   type AudioRoute,
   type CallEvent,
-  type OtherAudioEvent,
+  type MediaPlaybackEvent,
 } from 'react-native-system-interruptions';
 
 const formatRoutes = (routes: AudioRoute[]) => routes.join(', ') || 'unknown';
+// iOS reports other apps' audio; Android reports any media, this app's included.
+const audioEvent = Platform.OS === 'ios' ? 'otherAudio' : 'mediaPlayback';
 
 export default function App() {
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
-  const [otherAudioEvents, setOtherAudioEvents] = useState<OtherAudioEvent[]>(
-    []
-  );
+  const [mediaEvents, setMediaEvents] = useState<MediaPlaybackEvent[]>([]);
   const [routeEvents, setRouteEvents] = useState<AudioRoute[][]>([]);
 
   useEffect(() => {
     const callSub = addListener('call', (event) => {
       setCallEvents((prev) => [event, ...prev]);
     });
-    const otherAudioSub = addListener('otherAudio', (event) => {
-      setOtherAudioEvents((prev) => [event, ...prev]);
+    const mediaSub = addListener(audioEvent, (event) => {
+      setMediaEvents((prev) => [event, ...prev]);
     });
     const routeSub = addListener('audioRoute', ({ routes }) => {
       setRouteEvents((prev) => [routes, ...prev]);
@@ -37,7 +37,7 @@ export default function App() {
 
     return () => {
       callSub.remove();
-      otherAudioSub.remove();
+      mediaSub.remove();
       routeSub.remove();
     };
   }, []);
@@ -45,7 +45,12 @@ export default function App() {
   const checkAvailable = async () => {
     const call = await SystemInterruptions.isAvailableAsync('call');
     const otherAudio = await SystemInterruptions.isAvailableAsync('otherAudio');
-    Alert.alert('isAvailable', `call: ${call}, otherAudio: ${otherAudio}`);
+    const mediaPlayback =
+      await SystemInterruptions.isAvailableAsync('mediaPlayback');
+    Alert.alert(
+      'isAvailable',
+      `call: ${call}, otherAudio: ${otherAudio}, mediaPlayback: ${mediaPlayback}`
+    );
   };
 
   const checkInCall = () => {
@@ -54,9 +59,13 @@ export default function App() {
       .catch((e) => Alert.alert(e.code, e.message));
   };
 
-  const checkOtherAudio = () => {
-    SystemInterruptions.isOtherAudioPlayingAsync()
-      .then((playing) => Alert.alert('isOtherAudioPlaying', String(playing)))
+  const checkAudio = () => {
+    const read =
+      Platform.OS === 'ios'
+        ? SystemInterruptions.isOtherAudioPlayingAsync
+        : SystemInterruptions.isMediaPlaybackActiveAsync;
+    read()
+      .then((playing) => Alert.alert(audioEvent, String(playing)))
       .catch((e) => Alert.alert(e.code, e.message));
   };
 
@@ -68,14 +77,9 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {/* TODO: show on iOS once isAvailableAsync and isOtherAudioPlayingAsync exist there. */}
-      {Platform.OS === 'android' && (
-        <Button title="isAvailable" onPress={checkAvailable} />
-      )}
+      <Button title="isAvailable" onPress={checkAvailable} />
       <Button title="isInCall" onPress={checkInCall} />
-      {Platform.OS === 'android' && (
-        <Button title="isOtherAudioPlaying" onPress={checkOtherAudio} />
-      )}
+      <Button title={audioEvent} onPress={checkAudio} />
       <Button title="getAudioRoutes" onPress={checkAudioRoutes} />
       <Text style={styles.title}>call</Text>
       <ScrollView style={styles.list}>
@@ -84,9 +88,9 @@ export default function App() {
         ))}
       </ScrollView>
 
-      <Text style={styles.title}>otherAudio</Text>
+      <Text style={styles.title}>{audioEvent}</Text>
       <ScrollView style={styles.list}>
-        {otherAudioEvents.map((e, i) => (
+        {mediaEvents.map((e, i) => (
           <Text key={i}>{e}</Text>
         ))}
       </ScrollView>

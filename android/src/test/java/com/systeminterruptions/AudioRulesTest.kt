@@ -31,23 +31,23 @@ class AudioRulesTest {
   }
 
   @Test
-  fun isOtherAudio_music_isTrue() {
-    assertTrue(isOtherAudio(AudioAttributes.USAGE_MEDIA, AudioAttributes.CONTENT_TYPE_MUSIC))
+  fun isMediaPlayback_music_isTrue() {
+    assertTrue(isMediaPlayback(AudioAttributes.USAGE_MEDIA, AudioAttributes.CONTENT_TYPE_MUSIC))
   }
 
   @Test
-  fun isOtherAudio_spotifyUnknownMedia_isTrue() {
-    assertTrue(isOtherAudio(AudioAttributes.USAGE_MEDIA, AudioAttributes.CONTENT_TYPE_UNKNOWN))
+  fun isMediaPlayback_spotifyUnknownMedia_isTrue() {
+    assertTrue(isMediaPlayback(AudioAttributes.USAGE_MEDIA, AudioAttributes.CONTENT_TYPE_UNKNOWN))
   }
 
   @Test
-  fun isOtherAudio_voiceCall_isFalse() {
-    assertFalse(isOtherAudio(AudioAttributes.USAGE_VOICE_COMMUNICATION, AudioAttributes.CONTENT_TYPE_SPEECH))
+  fun isMediaPlayback_voiceCall_isFalse() {
+    assertFalse(isMediaPlayback(AudioAttributes.USAGE_VOICE_COMMUNICATION, AudioAttributes.CONTENT_TYPE_SPEECH))
   }
 
   @Test
-  fun isOtherAudio_notification_isFalse() {
-    assertFalse(isOtherAudio(AudioAttributes.USAGE_NOTIFICATION, AudioAttributes.CONTENT_TYPE_SONIFICATION))
+  fun isMediaPlayback_notification_isFalse() {
+    assertFalse(isMediaPlayback(AudioAttributes.USAGE_NOTIFICATION, AudioAttributes.CONTENT_TYPE_SONIFICATION))
   }
 
   @Test
@@ -57,9 +57,14 @@ class AudioRulesTest {
   }
 
   @Test
-  fun isEventSupported_otherAudio_needsApi26() {
-    assertTrue(isEventSupported(EVENT_OTHER_AUDIO, 26))
-    assertFalse(isEventSupported(EVENT_OTHER_AUDIO, 25))
+  fun isEventSupported_mediaPlayback_needsApi26() {
+    assertTrue(isEventSupported(EVENT_MEDIA_PLAYBACK, 26))
+    assertFalse(isEventSupported(EVENT_MEDIA_PLAYBACK, 25))
+  }
+
+  @Test
+  fun isEventSupported_otherAudio_isFalse() {
+    assertFalse(isEventSupported("otherAudio", 36))
   }
 
   @Test
