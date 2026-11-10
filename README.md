@@ -1,12 +1,12 @@
-# react-native-system-interruptions
+# react-native-audio-observer
 
-Observe-only system interruptions for React Native (calls, audio route, other audio on iOS, media playback on Android) on iOS and Android
+Observe-only call and audio events for React Native (call state, audio route, other audio on iOS, media playback on Android) on iOS and Android
 
 ## Installation
 
 
 ```sh
-npm install react-native-system-interruptions
+npm install react-native-audio-observer
 ```
 
 
@@ -14,9 +14,9 @@ npm install react-native-system-interruptions
 
 
 ```js
-import SystemInterruptions, {
+import AudioObserver, {
   addListener,
-} from 'react-native-system-interruptions';
+} from 'react-native-audio-observer';
 
 // 1. Add the listener first.
 const subscription = addListener('audioRoute', ({ routes }) => {
@@ -24,7 +24,7 @@ const subscription = addListener('audioRoute', ({ routes }) => {
 });
 
 // 2. Then read the initial state.
-const routes = await SystemInterruptions.getAudioRoutesAsync();
+const routes = await AudioObserver.getAudioRoutesAsync();
 
 // Later
 subscription.remove();

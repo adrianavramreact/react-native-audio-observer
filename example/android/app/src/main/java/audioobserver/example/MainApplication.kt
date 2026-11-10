@@ -1,4 +1,4 @@
-package systeminterruptions.example
+package audioobserver.example
 
 import android.app.Application
 import com.facebook.react.PackageList

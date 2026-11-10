@@ -1,4 +1,4 @@
-import SystemInterruptions from './NativeSystemInterruptions';
+import AudioObserver from './NativeAudioObserver';
 import type { EventSubscription } from 'react-native';
 import type {
   AudioRoute,
@@ -6,7 +6,7 @@ import type {
   AudioRouteEvent,
   OtherAudioEvent,
   MediaPlaybackEvent,
-} from './NativeSystemInterruptions';
+} from './NativeAudioObserver';
 
 export type {
   AudioRoute,
@@ -39,7 +39,7 @@ export function addListener<K extends keyof EventMap>(
   const subscription = subscribe(eventName, listener);
   const count = counts[eventName] ?? 0;
   if (count === 0) {
-    SystemInterruptions.startObservingAsync(eventName).catch((e) =>
+    AudioObserver.startObservingAsync(eventName).catch((e) =>
       console.warn(`startObservingAsync('${eventName}') failed`, e)
     );
   }
@@ -54,7 +54,7 @@ export function addListener<K extends keyof EventMap>(
       const left = counts[eventName]! - 1;
       counts[eventName] = left;
       if (left === 0) {
-        SystemInterruptions.stopObservingAsync(eventName).catch((e) =>
+        AudioObserver.stopObservingAsync(eventName).catch((e) =>
           console.warn(`stopObservingAsync('${eventName}') failed`, e)
         );
       }
@@ -68,27 +68,27 @@ function subscribe<K extends keyof EventMap>(
 ): EventSubscription {
   switch (eventName) {
     case 'call':
-      return SystemInterruptions.onCall(listener as (event: CallEvent) => void);
+      return AudioObserver.onCall(listener as (event: CallEvent) => void);
     case 'audioRoute':
-      return SystemInterruptions.onAudioRoute(
+      return AudioObserver.onAudioRoute(
         listener as (event: AudioRouteEvent) => void
       );
     case 'otherAudio':
-      return SystemInterruptions.onOtherAudio(
+      return AudioObserver.onOtherAudio(
         listener as (event: OtherAudioEvent) => void
       );
     case 'mediaPlayback':
-      return SystemInterruptions.onMediaPlayback(
+      return AudioObserver.onMediaPlayback(
         listener as (event: MediaPlaybackEvent) => void
       );
   }
 }
 export default {
   isAvailableAsync: (event: keyof EventMap) =>
-    SystemInterruptions.isAvailableAsync(event),
-  isInCallAsync: SystemInterruptions.isInCallAsync,
-  getAudioRoutesAsync: SystemInterruptions.getAudioRoutesAsync,
-  isOtherAudioPlayingAsync: SystemInterruptions.isOtherAudioPlayingAsync,
-  isMediaPlaybackActiveAsync: SystemInterruptions.isMediaPlaybackActiveAsync,
+    AudioObserver.isAvailableAsync(event),
+  isInCallAsync: AudioObserver.isInCallAsync,
+  getAudioRoutesAsync: AudioObserver.getAudioRoutesAsync,
+  isOtherAudioPlayingAsync: AudioObserver.isOtherAudioPlayingAsync,
+  isMediaPlaybackActiveAsync: AudioObserver.isMediaPlaybackActiveAsync,
   addListener,
 };

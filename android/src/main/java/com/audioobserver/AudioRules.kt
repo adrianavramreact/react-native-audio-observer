@@ -1,4 +1,4 @@
-package com.systeminterruptions
+package com.audioobserver
 import android.annotation.SuppressLint
 import android.media.AudioAttributes
 import android.media.AudioDeviceInfo

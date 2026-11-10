@@ -1,12 +1,12 @@
 {
-  "name": "react-native-system-interruptions",
+  "name": "react-native-audio-observer",
   "version": "0.1.0",
-  "description": "Observe-only system interruptions for React Native (calls, audio route, other audio on iOS, media playback on Android) on iOS and Android",
+  "description": "Observe-only call and audio events for React Native (call state, audio route, other audio on iOS, media playback on Android) on iOS and Android",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "react-native-system-interruptions-source": "./src/index.tsx",
+      "react-native-audio-observer-source": "./src/index.tsx",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
@@ -32,13 +32,13 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-system-interruptions-example",
+    "example": "yarn workspace react-native-audio-observer-example",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "test": "jest",
-    "test:android": "cd example/android && ./gradlew :react-native-system-interruptions:testDebugUnitTest",
+    "test:android": "cd example/android && ./gradlew :react-native-audio-observer:testDebugUnitTest",
     "release": "release-it --only-version"
   },
   "keywords": [
@@ -48,14 +48,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adrianavramreact/react-native-system-interruptions.git"
+    "url": "git+https://github.com/adrianavramreact/react-native-audio-observer.git"
   },
   "author": "Adrian-Constantin Avram <aditaavram19@gmail.com> (https://github.com/adrianavramreact)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/adrianavramreact/react-native-system-interruptions/issues"
+    "url": "https://github.com/adrianavramreact/react-native-audio-observer/issues"
   },
-  "homepage": "https://github.com/adrianavramreact/react-native-system-interruptions#readme",
+  "homepage": "https://github.com/adrianavramreact/react-native-audio-observer#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -113,15 +113,15 @@
     ]
   },
   "codegenConfig": {
-    "name": "SystemInterruptionsSpec",
+    "name": "AudioObserverSpec",
     "type": "modules",
     "jsSrcsDir": "src",
     "android": {
-      "javaPackageName": "com.systeminterruptions"
+      "javaPackageName": "com.audioobserver"
     },
     "ios": {
       "modulesProvider": {
-        "SystemInterruptions": "RCTSystemInterruptions"
+        "AudioObserver": "RCTAudioObserver"
       }
     }
   },
@@ -138,7 +138,7 @@
       "customExportConditions": [
         "require",
         "react-native",
-        "react-native-system-interruptions-source"
+        "react-native-audio-observer-source"
       ]
     },
     "modulePathIgnorePatterns": [

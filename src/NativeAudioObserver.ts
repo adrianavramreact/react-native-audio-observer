@@ -27,4 +27,4 @@ export interface Spec extends TurboModule {
   readonly onMediaPlayback: CodegenTypes.EventEmitter<MediaPlaybackEvent>;
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('SystemInterruptions');
+export default TurboModuleRegistry.getEnforcing<Spec>('AudioObserver');

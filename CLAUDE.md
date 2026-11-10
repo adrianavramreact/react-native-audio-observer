@@ -1,6 +1,6 @@
-# react-native-system-interruptions
+# react-native-audio-observer
 
-TurboModule (iOS + Android) that **only observes** system interruptions. It never requests audio focus, never activates the iOS audio session, and never reads phone numbers or audio content.
+TurboModule (iOS + Android) that **only observes** calls and audio changes. It never requests audio focus, never activates the iOS audio session, and never reads phone numbers or audio content.
 
 - Events:
   - Both platforms: `call` (ringing / connected / ended), `audioRoute` (bluetooth / wired / speaker).

@@ -1,8 +1,8 @@
 import { it, expect, jest, beforeEach } from '@jest/globals';
 import { addListener } from '../index';
-import Native from '../NativeSystemInterruptions';
+import Native from '../NativeAudioObserver';
 
-jest.mock('../NativeSystemInterruptions', () => {
+jest.mock('../NativeAudioObserver', () => {
   const sub = () => ({ remove: jest.fn() });
   return {
     __esModule: true,

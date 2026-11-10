@@ -1,6 +1,6 @@
 # Design
 
-`react-native-system-interruptions` is a TurboModule (iOS + Android) that **only observes** system interruptions and reports them to JS as a small set of normalized events.
+`react-native-audio-observer` is a TurboModule (iOS + Android) that **only observes** calls and audio changes and reports them to JS as a small set of normalized events.
 
 ## Public API
 
@@ -22,7 +22,7 @@ isOtherAudioPlayingAsync(): Promise<boolean>    // iOS only, rejects ERR_UNSUPPO
 isMediaPlaybackActiveAsync(): Promise<boolean>  // Android only, rejects ERR_UNSUPPORTED on iOS
 
 // React hook built on the above; cleans up on unmount.
-useSystemInterruptions(): {
+useAudioObserver(): {
   call: CallState
   audioRoute: AudioRoute
   otherAudio: OtherAudioState | 'unsupported'

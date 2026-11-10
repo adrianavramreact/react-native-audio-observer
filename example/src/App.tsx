@@ -8,12 +8,12 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import SystemInterruptions, {
+import AudioObserver, {
   addListener,
   type AudioRoute,
   type CallEvent,
   type MediaPlaybackEvent,
-} from 'react-native-system-interruptions';
+} from 'react-native-audio-observer';
 
 const formatRoutes = (routes: AudioRoute[]) => routes.join(', ') || 'unknown';
 // iOS reports other apps' audio; Android reports any media, this app's included.
@@ -43,10 +43,9 @@ export default function App() {
   }, []);
 
   const checkAvailable = async () => {
-    const call = await SystemInterruptions.isAvailableAsync('call');
-    const otherAudio = await SystemInterruptions.isAvailableAsync('otherAudio');
-    const mediaPlayback =
-      await SystemInterruptions.isAvailableAsync('mediaPlayback');
+    const call = await AudioObserver.isAvailableAsync('call');
+    const otherAudio = await AudioObserver.isAvailableAsync('otherAudio');
+    const mediaPlayback = await AudioObserver.isAvailableAsync('mediaPlayback');
     Alert.alert(
       'isAvailable',
       `call: ${call}, otherAudio: ${otherAudio}, mediaPlayback: ${mediaPlayback}`
@@ -54,7 +53,7 @@ export default function App() {
   };
 
   const checkInCall = () => {
-    SystemInterruptions.isInCallAsync()
+    AudioObserver.isInCallAsync()
       .then((inCall) => Alert.alert('isInCall', String(inCall)))
       .catch((e) => Alert.alert(e.code, e.message));
   };
@@ -62,15 +61,15 @@ export default function App() {
   const checkAudio = () => {
     const read =
       Platform.OS === 'ios'
-        ? SystemInterruptions.isOtherAudioPlayingAsync
-        : SystemInterruptions.isMediaPlaybackActiveAsync;
+        ? AudioObserver.isOtherAudioPlayingAsync
+        : AudioObserver.isMediaPlaybackActiveAsync;
     read()
       .then((playing) => Alert.alert(audioEvent, String(playing)))
       .catch((e) => Alert.alert(e.code, e.message));
   };
 
   const checkAudioRoutes = () => {
-    SystemInterruptions.getAudioRoutesAsync()
+    AudioObserver.getAudioRoutesAsync()
       .then((routes) => Alert.alert('audioRoutes', formatRoutes(routes)))
       .catch((e) => Alert.alert(e.code, e.message));
   };

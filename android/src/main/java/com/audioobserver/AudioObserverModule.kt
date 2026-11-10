@@ -1,4 +1,4 @@
-package com.systeminterruptions
+package com.audioobserver
 import android.annotation.SuppressLint
 import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
@@ -10,8 +10,8 @@ import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
-  NativeSystemInterruptionsSpec(reactContext) {
+class AudioObserverModule(reactContext: ReactApplicationContext) :
+  NativeAudioObserverSpec(reactContext) {
   private val audioManager by lazy {
     reactApplicationContext.getSystemService(AudioManager::class.java)
   }
@@ -224,6 +224,6 @@ class SystemInterruptionsModule(reactContext: ReactApplicationContext) :
     promise.reject("ERR_UNSUPPORTED", "otherAudio is iOS only. Use mediaPlayback on Android.")
   }
   companion object {
-    const val NAME = NativeSystemInterruptionsSpec.NAME
+    const val NAME = NativeAudioObserverSpec.NAME
   }
 }

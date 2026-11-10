@@ -1,6 +1,6 @@
 # Limitations
 
-Known platform limits of `react-native-system-interruptions`. See `docs/DESIGN.md` for how each event is detected.
+Known platform limits of `react-native-audio-observer`. See `docs/DESIGN.md` for how each event is detected.
 
 ## iOS
 

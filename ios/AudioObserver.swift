@@ -2,7 +2,7 @@ import AVFoundation
 import CallKit
 import UIKit
 
-@objcMembers public class SystemInterruptions: NSObject, CXCallObserverDelegate {
+@objcMembers public class AudioObserverImpl: NSObject, CXCallObserverDelegate {
   private let queue: DispatchQueue
   private let onAudioRouteChange: ([String]) -> Void
   private let onCallChange: (String) -> Void

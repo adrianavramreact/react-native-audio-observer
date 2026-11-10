@@ -1,4 +1,4 @@
-package com.systeminterruptions
+package com.audioobserver
 
 import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule
@@ -7,10 +7,10 @@ import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
 import java.util.HashMap
 
-class SystemInterruptionsPackage : BaseReactPackage() {
+class AudioObserverPackage : BaseReactPackage() {
   override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-    return if (name == SystemInterruptionsModule.NAME) {
-      SystemInterruptionsModule(reactContext)
+    return if (name == AudioObserverModule.NAME) {
+      AudioObserverModule(reactContext)
     } else {
       null
     }
@@ -18,9 +18,9 @@ class SystemInterruptionsPackage : BaseReactPackage() {
 
   override fun getReactModuleInfoProvider() = ReactModuleInfoProvider {
     mapOf(
-      SystemInterruptionsModule.NAME to ReactModuleInfo(
-        name = SystemInterruptionsModule.NAME,
-        className = SystemInterruptionsModule.NAME,
+      AudioObserverModule.NAME to ReactModuleInfo(
+        name = AudioObserverModule.NAME,
+        className = AudioObserverModule.NAME,
         canOverrideExistingModule = false,
         needsEagerInit = false,
         isCxxModule = false,

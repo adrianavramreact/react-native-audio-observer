@@ -1,23 +1,23 @@
-#import "RCTSystemInterruptions.h"
+#import "RCTAudioObserver.h"
 // The Swift header below declares CXCallObserverDelegate, so CallKit must come first.
 #import <CallKit/CallKit.h>
 
-#if __has_include(<SystemInterruptions/SystemInterruptions-Swift.h>)
-#import <SystemInterruptions/SystemInterruptions-Swift.h>
+#if __has_include(<AudioObserver/AudioObserver-Swift.h>)
+#import <AudioObserver/AudioObserver-Swift.h>
 #else
-#import "SystemInterruptions-Swift.h"
+#import "AudioObserver-Swift.h"
 #endif
 
-@implementation RCTSystemInterruptions {
-    SystemInterruptions *impl;
+@implementation RCTAudioObserver {
+    AudioObserverImpl *impl;
     dispatch_queue_t queue;
 }
 
 - (id)init {
     if (self = [super init]) {
-        queue = dispatch_queue_create("com.systeminterruptions.queue", DISPATCH_QUEUE_SERIAL);
-        __weak RCTSystemInterruptions *weakSelf = self;
-        impl = [[SystemInterruptions alloc] initWithQueue:queue
+        queue = dispatch_queue_create("com.audioobserver.queue", DISPATCH_QUEUE_SERIAL);
+        __weak RCTAudioObserver *weakSelf = self;
+        impl = [[AudioObserverImpl alloc] initWithQueue:queue
             onAudioRouteChange:^(NSArray<NSString *> *routes) {
                 [weakSelf emitOnAudioRoute:@{@"routes": routes}];
             }
@@ -95,12 +95,12 @@
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-    return std::make_shared<facebook::react::NativeSystemInterruptionsSpecJSI>(params);
+    return std::make_shared<facebook::react::NativeAudioObserverSpecJSI>(params);
 }
 
 + (NSString *)moduleName
 {
-  return @"SystemInterruptions";
+  return @"AudioObserver";
 }
 
 @end
