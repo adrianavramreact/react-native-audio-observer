@@ -20,15 +20,14 @@ isInCallAsync(): Promise<boolean>
 getAudioRoutesAsync(): Promise<AudioRoute[]>
 isOtherAudioPlayingAsync(): Promise<boolean>    // iOS only, rejects ERR_UNSUPPORTED on Android
 isMediaPlaybackActiveAsync(): Promise<boolean>  // Android only, rejects ERR_UNSUPPORTED on iOS
-
-// React hook built on the above; cleans up on unmount.
-useAudioObserver(): {
-  call: CallState
-  audioRoute: AudioRoute
-  otherAudio: OtherAudioState | 'unsupported'
-  mediaPlayback: MediaPlaybackState | 'unsupported'
-}
 ```
+
+There is no React hook. In a component, call `addListener` in `useEffect` and `remove()` in its cleanup (see README). This is the same pattern as `AppState` and `Keyboard`, and it also works outside components.
+
+### Native lifecycle
+
+- Native observing runs only while an event has at least one listener.
+- When React Native destroys the module (for example on reload), every native observer is removed: `invalidate()` on Android, `deinit` on iOS. Otherwise the old callbacks would stay registered and the new module would add its own on top.
 
 ## Normalized events
 
