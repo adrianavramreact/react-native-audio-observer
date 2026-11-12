@@ -140,6 +140,15 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
     routeModeListener = null
   }
 
+  // Stops every observer when React Native tears the module down (for example on reload).
+  // https://github.com/react/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/interfaces/TurboModule.kt#L15
+  override fun invalidate() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) stopMediaPlayback()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stopCall()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) stopAudioRoute()
+    super.invalidate()
+  }
+
   // API levels are checked by isEventSupported before each call.
   @SuppressLint("NewApi")
   override fun startObservingAsync(event: String, promise: Promise) {
