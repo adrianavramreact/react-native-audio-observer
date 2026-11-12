@@ -15,6 +15,11 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
   s.private_header_files = "ios/**/*.h"
+  s.exclude_files = "ios/Tests/**/*"
+
+  s.test_spec "Tests" do |test_spec|
+    test_spec.source_files = "ios/Tests/**/*.swift"
+  end
 
   install_modules_dependencies(s)
 end

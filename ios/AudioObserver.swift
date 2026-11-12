@@ -40,23 +40,18 @@ import UIKit
     stopOtherAudio()
   }
 
-  // If you are on a call and another one rings, you are still "connected".
   public func currentCall() -> String {
-    let activeCalls = callObserver.calls.filter { call in
-      !call.hasEnded
-    }
-    let hasConnectedCall = activeCalls.contains { call in
-      call.hasConnected || call.isOutgoing
-    }
-    if hasConnectedCall { return "connected" }
-    if !activeCalls.isEmpty { return "ringing" }
-    return "none"
+    callFromCalls(callObserver.calls.map { call in
+      CallInfo(hasEnded: call.hasEnded, hasConnected: call.hasConnected, isOutgoing: call.isOutgoing)
+    })
   }
 
-  // Sorted so two lists with the same routes are equal when compared.
   public func currentRoutes() -> [String] {
     let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
-    return Set(outputs.map { output in route(for: output.portType) }).sorted()
+    let ports = outputs.map { output in
+      output.portType
+    }
+    return routesFromPorts(ports)
   }
 
   // Another app's audio; your own app's sound does not count.
@@ -142,7 +137,11 @@ import UIKit
   }
 
   // Called by iOS when a call rings, connects or ends.
-  public func callObserver(_: CXCallObserver, callChanged _: CXCall) {
+  public func callObserver(_: CXCallObserver, callChanged call: CXCall) {
+    NSLog(
+      "Lookhere: call hasConnected=%@ hasEnded=%@ isOutgoing=%@ onHold=%@",
+      String(call.hasConnected), String(call.hasEnded), String(call.isOutgoing), String(call.isOnHold)
+    )
     onCallChanged()
   }
 
@@ -179,18 +178,5 @@ import UIKit
     if playing == lastOtherAudio { return }
     lastOtherAudio = playing
     onOtherAudioChange(playing ? "started" : "stopped")
-  }
-
-  private func route(for port: AVAudioSession.Port) -> String {
-    switch port {
-    case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
-      return "bluetooth"
-    case .headphones, .usbAudio, .lineOut:
-      return "wired"
-    case .builtInSpeaker, .builtInReceiver:
-      return "speaker"
-    default:
-      return "unknown"
-    }
   }
 }

@@ -39,6 +39,7 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "test": "jest",
     "test:android": "cd example/android && ./gradlew :react-native-audio-observer:testDebugUnitTest",
+    "test:ios": "cd example/ios && xcodebuild test -workspace AudioObserverExample.xcworkspace -scheme AudioObserver-Unit-Tests -destination 'platform=iOS Simulator,name=iPhone 17' -quiet",
     "release": "release-it --only-version"
   },
   "keywords": [
