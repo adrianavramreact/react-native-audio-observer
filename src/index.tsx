@@ -1,4 +1,4 @@
-import AudioObserver from './NativeAudioObserver';
+import NativeAudioObserver from './NativeAudioObserver';
 import type { EventSubscription } from 'react-native';
 import type {
   AudioRoute,
@@ -39,7 +39,7 @@ export function addListener<K extends keyof EventMap>(
   const subscription = subscribe(eventName, listener);
   const count = counts[eventName] ?? 0;
   if (count === 0) {
-    AudioObserver.startObservingAsync(eventName).catch((e) =>
+    NativeAudioObserver.startObservingAsync(eventName).catch((e) =>
       console.warn(`startObservingAsync('${eventName}') failed`, e)
     );
   }
@@ -54,7 +54,7 @@ export function addListener<K extends keyof EventMap>(
       const left = counts[eventName]! - 1;
       counts[eventName] = left;
       if (left === 0) {
-        AudioObserver.stopObservingAsync(eventName).catch((e) =>
+        NativeAudioObserver.stopObservingAsync(eventName).catch((e) =>
           console.warn(`stopObservingAsync('${eventName}') failed`, e)
         );
       }
@@ -68,27 +68,27 @@ function subscribe<K extends keyof EventMap>(
 ): EventSubscription {
   switch (eventName) {
     case 'call':
-      return AudioObserver.onCall(listener as (event: CallEvent) => void);
+      return NativeAudioObserver.onCall(listener as (event: CallEvent) => void);
     case 'audioRoute':
-      return AudioObserver.onAudioRoute(
+      return NativeAudioObserver.onAudioRoute(
         listener as (event: AudioRouteEvent) => void
       );
     case 'otherAudio':
-      return AudioObserver.onOtherAudio(
+      return NativeAudioObserver.onOtherAudio(
         listener as (event: OtherAudioEvent) => void
       );
     case 'mediaPlayback':
-      return AudioObserver.onMediaPlayback(
+      return NativeAudioObserver.onMediaPlayback(
         listener as (event: MediaPlaybackEvent) => void
       );
   }
 }
 export default {
   isAvailableAsync: (event: keyof EventMap) =>
-    AudioObserver.isAvailableAsync(event),
-  isInCallAsync: AudioObserver.isInCallAsync,
-  getAudioRoutesAsync: AudioObserver.getAudioRoutesAsync,
-  isOtherAudioPlayingAsync: AudioObserver.isOtherAudioPlayingAsync,
-  isMediaPlaybackActiveAsync: AudioObserver.isMediaPlaybackActiveAsync,
+    NativeAudioObserver.isAvailableAsync(event),
+  isInCallAsync: NativeAudioObserver.isInCallAsync,
+  getAudioRoutesAsync: NativeAudioObserver.getAudioRoutesAsync,
+  isOtherAudioPlayingAsync: NativeAudioObserver.isOtherAudioPlayingAsync,
+  isMediaPlaybackActiveAsync: NativeAudioObserver.isMediaPlaybackActiveAsync,
   addListener,
 };
