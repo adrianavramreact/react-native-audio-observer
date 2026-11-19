@@ -39,9 +39,13 @@ export function addListener<K extends keyof EventMap>(
   const subscription = subscribe(eventName, listener);
   const count = counts[eventName] ?? 0;
   if (count === 0) {
-    NativeAudioObserver.startObservingAsync(eventName).catch((e) =>
-      console.warn(`startObservingAsync('${eventName}') failed`, e)
-    );
+    (async () => {
+      try {
+        await NativeAudioObserver.startObservingAsync(eventName);
+      } catch (e) {
+        console.warn(`startObservingAsync('${eventName}') failed`, e);
+      }
+    })();
   }
   counts[eventName] = count + 1;
 
@@ -54,9 +58,13 @@ export function addListener<K extends keyof EventMap>(
       const left = counts[eventName]! - 1;
       counts[eventName] = left;
       if (left === 0) {
-        NativeAudioObserver.stopObservingAsync(eventName).catch((e) =>
-          console.warn(`stopObservingAsync('${eventName}') failed`, e)
-        );
+        (async () => {
+          try {
+            await NativeAudioObserver.stopObservingAsync(eventName);
+          } catch (e) {
+            console.warn(`stopObservingAsync('${eventName}') failed`, e);
+          }
+        })();
       }
     },
   };
