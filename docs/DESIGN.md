@@ -65,6 +65,17 @@ Rules shared by all events:
 
 Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored. Your app's own players count too: Android does not say which app owns a player.
 
+### iOS: `audioRoute`
+
+`getAudioRoutesAsync()` reads `AVAudioSession.currentRoute.outputs`. `audioRoute` fires only when the reported output types change. [Apple's audio route documentation](https://developer.apple.com/documentation/avfaudio/responding-to-audio-route-changes)
+
+**Quick test on iPhone**
+
+1. Open the example app. While media is playing, plug in or unplug wired headphones, or connect or disconnect Bluetooth headphones. Use **Control Center → Playback Destination** to check the active output. You can also switch to another available output there. [Apple's playback destination guide](https://support.apple.com/guide/iphone/play-audio-iphone-a-bluetooth-accessory-iph01b6ea9a3/ios)
+2. Back in the example app, check the `audioRoute` history and tap **getAudioRoutes**.
+
+**What we saw on an iPhone.** YouTube audio moved from the speaker to Bluetooth, then to wired headphones. Reconnecting Bluetooth left the sound on the wired pair. In that case, expect `wired` and no new `audioRoute` event. The same pair was silent during a phone call. For call audio tests, use a headset with confirmed support, such as AirPods. [iOS limitations](../LIMITATIONS.md#ios)
+
 ### iOS: `otherAudio`
 
 - **Foreground only.** In the background the app is suspended, and the `audio` background mode is only allowed for real playback (App Review 2.5.4).
