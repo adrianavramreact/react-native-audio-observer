@@ -164,7 +164,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       }
       promise.resolve(null)
     } catch (e: Exception) {
-      promise.reject("ERR_START_OBSERVING", e)
+      promise.reject("ERR_START_OBSERVING", "Could not start observing $event", e)
     }
   }
 
@@ -182,7 +182,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       }
       promise.resolve(null)
     } catch (e: Exception) {
-      promise.reject("ERR_STOP_OBSERVING", e)
+      promise.reject("ERR_STOP_OBSERVING", "Could not stop observing $event", e)
     }
   }
 
@@ -198,7 +198,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       }
       promise.resolve(callFromMode(audioManager.mode) == "connected")
     } catch (e: Exception) {
-      promise.reject("ERR_IS_IN_CALL", e)
+      promise.reject("ERR_IS_IN_CALL", "Could not read the call state", e)
     }
   }
 
@@ -211,7 +211,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       }
       promise.resolve(Arguments.fromList(currentRoutes()))
     } catch (e: Exception) {
-      promise.reject("ERR_GET_AUDIO_ROUTES", e)
+      promise.reject("ERR_GET_AUDIO_ROUTES", "Could not read the audio routes", e)
     }
   }
 
@@ -224,7 +224,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       }
       promise.resolve(isMediaPlaybackActive(audioManager.activePlaybackConfigurations))
     } catch (e: Exception) {
-      promise.reject("ERR_IS_MEDIA_PLAYBACK_ACTIVE", e)
+      promise.reject("ERR_IS_MEDIA_PLAYBACK_ACTIVE", "Could not read the media playback state", e)
     }
   }
 
