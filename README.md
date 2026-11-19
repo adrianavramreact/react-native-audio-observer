@@ -4,19 +4,14 @@ Observe-only call and audio events for React Native (call state, audio route, ot
 
 ## Installation
 
-
 ```sh
 npm install react-native-audio-observer
 ```
 
-
 ## Usage
 
-
 ```js
-import AudioObserver, {
-  addListener,
-} from 'react-native-audio-observer';
+import AudioObserver, { addListener } from 'react-native-audio-observer';
 
 // 1. Add the listener first.
 const subscription = addListener('audioRoute', ({ routes }) => {
@@ -43,11 +38,15 @@ useEffect(() => {
   });
 
   // 2. Then read the initial state.
-  AudioObserver.getAudioRoutesAsync()
-    .then((routes) => {
+  const readInitialRoutes = async () => {
+    try {
+      const routes = await AudioObserver.getAudioRoutesAsync();
       if (useInitial) setRoutes(routes);
-    })
-    .catch(() => {}); // ERR_UNSUPPORTED below Android API 33
+    } catch {
+      // ERR_UNSUPPORTED below Android API 33
+    }
+  };
+  readInitialRoutes();
 
   // 3. Remove it on unmount.
   return () => subscription.remove();
@@ -61,7 +60,6 @@ Calling `remove()` more than once is safe.
 > **Never interrupts playback.** The module only observes: it never requests audio focus on Android and never activates the audio session on iOS, so it never pauses or ducks any app.
 
 See [`LIMITATIONS.md`](LIMITATIONS.md) for platform limits.
-
 
 ## License
 
