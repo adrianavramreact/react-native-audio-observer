@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.WindowFocusChangeListener
 class AudioObserverModule(reactContext: ReactApplicationContext) :
   NativeAudioObserverSpec(reactContext) {
   private val audioManager by lazy {
@@ -29,6 +30,8 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   private var lastRoutes = listOf<String>()
   private var routeModeListener: AudioManager.OnModeChangedListener? = null
+  private var communicationDeviceListener: AudioManager.OnCommunicationDeviceChangedListener? = null
+  private var focusListener: WindowFocusChangeListener? = null
   private val mediaAttributes = AudioAttributes.Builder()
     .setUsage(AudioAttributes.USAGE_MEDIA)
     .build()
@@ -123,7 +126,12 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   // Save the current list before registering: a change in between still arrives,
   // because registering calls onAudioDevicesAdded with the connected devices.
-  // The mode listener is here too: a call moves the route without any device change.
+  // Each listener reads the route again:
+  // - AudioDeviceCallback: a device connects or disconnects.
+  // - OnModeChangedListener: call/media route switch.
+  // - OnCommunicationDeviceChangedListener: the output changes during a call (for example speaker).
+  // - WindowFocusChangeListener: the app is back on screen, like didBecomeActive on iOS.
+  //   Android has no public listener for a media output switch, so it is caught here.
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   private fun startAudioRoute() {
     lastRoutes = currentRoutes()
@@ -131,6 +139,16 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
     val listener = AudioManager.OnModeChangedListener { onRoutesChanged() }
     audioManager.addOnModeChangedListener(reactApplicationContext.mainExecutor, listener)
     routeModeListener = listener
+    val deviceListener = AudioManager.OnCommunicationDeviceChangedListener { onRoutesChanged() }
+    audioManager.addOnCommunicationDeviceChangedListener(reactApplicationContext.mainExecutor, deviceListener)
+    communicationDeviceListener = deviceListener
+    val focus = object : WindowFocusChangeListener {
+      override fun onWindowFocusChange(hasFocus: Boolean) {
+        if (hasFocus) onRoutesChanged()
+      }
+    }
+    reactApplicationContext.addWindowFocusChangeListener(focus)
+    focusListener = focus
   }
 
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -138,6 +156,10 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
     audioManager.unregisterAudioDeviceCallback(deviceCallback)
     routeModeListener?.let { audioManager.removeOnModeChangedListener(it) }
     routeModeListener = null
+    communicationDeviceListener?.let { audioManager.removeOnCommunicationDeviceChangedListener(it) }
+    communicationDeviceListener = null
+    focusListener?.let { reactApplicationContext.removeWindowFocusChangeListener(it) }
+    focusListener = null
   }
 
   // Stops every observer when React Native tears the module down (for example on reload).
