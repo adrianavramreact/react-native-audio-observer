@@ -34,7 +34,7 @@ There is no React hook. In a component, call `addListener` in `useEffect` and `r
 | Event | Payload | iOS source | Android source |
 |---|---|---|---|
 | `call` | `'ringing' \| 'connected' \| 'ended'` | `CXCallObserver` | `AudioManager` mode: `RINGTONE` → ringing, `IN_CALL` / `IN_COMMUNICATION` → connected, back to `NORMAL` → ended |
-| `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker' \| 'unknown')[] }` | `AVAudioSession.routeChangeNotification` | `AudioDeviceCallback`, mode listener, `getAudioDevicesForAttributes` |
+| `audioRoute` | `{ routes: ('bluetooth' \| 'wired' \| 'speaker' \| 'unknown')[] }` | `AVAudioSession.routeChangeNotification` | `getAudioDevicesForAttributes`, read again by: `AudioDeviceCallback` (device added/removed), mode listener (call/media switch), `OnCommunicationDeviceChangedListener` (in-call output), `WindowFocusChangeListener` (back on screen: rechecks after a media output switch, which Android does not report) |
 | `otherAudio` | `'started' \| 'stopped'` | `AVAudioSession.isOtherAudioPlaying`, read when the app becomes active | not available (ADR-006) |
 | `mediaPlayback` | `'started' \| 'stopped'` | not available (ADR-006) | `AudioPlaybackCallback` |
 
@@ -88,11 +88,7 @@ Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored. Y
 - Never reads phone numbers, contacts or call logs (ADR-003).
 - Never records or reads audio content.
 - Does not say **which app** is playing or calling.
-- Does not distinguish GSM from VoIP calls in the public API.
+- Does not distinguish GSM from VoIP calls in the public API. Android could tell from the mode (`IN_CALL` vs `IN_COMMUNICATION`), but iOS [`CXCall`](https://developer.apple.com/documentation/callkit/cxcall) does not say which kind a call is, so both platforms report the same `call` events.
 - Does not emit `otherAudio` on iOS while in the background.
 - Does not report `otherAudio` on Android or `mediaPlayback` on iOS (ADR-006).
 - Collects and sends no data. Whatever the app does with the events is the app's responsibility.
-
-## Open questions
-
-- Should `call` expose `kind: 'cellular' | 'voip'`? Android can tell from the mode (`IN_CALL` vs `IN_COMMUNICATION`); iOS `CXCall` cannot.
