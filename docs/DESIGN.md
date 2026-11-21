@@ -28,6 +28,7 @@ There is no React hook. In a component, call `addListener` in `useEffect` and `r
 
 - Native observing runs only while an event has at least one listener.
 - When React Native destroys the module (for example on reload), every native observer is removed: `invalidate()` on Android, `deinit` on iOS. Otherwise the old callbacks would stay registered and the new module would add its own on top.
+- Native work runs on one background thread, never on the UI thread: a serial queue on iOS (`com.audioobserver.queue`) and a `HandlerThread` on Android (`com.audioobserver`). System callbacks and the work behind JS calls run there one at a time, so the saved state is read and written in one place. JS calls arrive on a React Native thread (`v_native` on Android, the TurboModule queue on iOS); quick checks that only read the OS version, such as `isAvailableAsync`, answer there directly. The Android window focus callback is a system callback, so it runs on the UI thread ([Android docs](https://developer.android.com/guide/components/processes-and-threads#Threads)) and only posts the route check to the module thread.
 
 ## Normalized events
 
