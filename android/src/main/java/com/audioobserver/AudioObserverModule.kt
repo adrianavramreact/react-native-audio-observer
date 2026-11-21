@@ -6,16 +6,25 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WindowFocusChangeListener
+import java.util.concurrent.Executor
 class AudioObserverModule(reactContext: ReactApplicationContext) :
   NativeAudioObserverSpec(reactContext) {
   private val audioManager by lazy {
     reactApplicationContext.getSystemService(AudioManager::class.java)
   }
+
+  // One background thread: calls from JS and system callbacks run here one at a time,
+  // so the UI thread stays free and the saved state is only read and written on this thread.
+  private val thread = HandlerThread("com.audioobserver").apply { start() }
+  private val handler = Handler(thread.looper)
+  private val executor = Executor { handler.post(it) }
 
   private var lastMediaPlayback = false
   // Lazy because AudioPlaybackCallback needs API 26 and minSdk is 24: creating it
@@ -62,7 +71,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   @RequiresApi(Build.VERSION_CODES.O)
   private fun startMediaPlayback() {
-    audioManager.registerAudioPlaybackCallback(playbackCallback, null)
+    audioManager.registerAudioPlaybackCallback(playbackCallback, handler)
     lastMediaPlayback = isMediaPlaybackActive(audioManager.activePlaybackConfigurations)
   }
 
@@ -84,7 +93,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
     val listener = AudioManager.OnModeChangedListener { mode ->
       onModeChanged(mode)
     }
-    audioManager.addOnModeChangedListener(reactApplicationContext.mainExecutor, listener)
+    audioManager.addOnModeChangedListener(executor, listener)
     modeListener = listener
   }
 
@@ -135,16 +144,16 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   private fun startAudioRoute() {
     lastRoutes = currentRoutes()
-    audioManager.registerAudioDeviceCallback(deviceCallback, null)
+    audioManager.registerAudioDeviceCallback(deviceCallback, handler)
     val listener = AudioManager.OnModeChangedListener { onRoutesChanged() }
-    audioManager.addOnModeChangedListener(reactApplicationContext.mainExecutor, listener)
+    audioManager.addOnModeChangedListener(executor, listener)
     routeModeListener = listener
     val deviceListener = AudioManager.OnCommunicationDeviceChangedListener { onRoutesChanged() }
-    audioManager.addOnCommunicationDeviceChangedListener(reactApplicationContext.mainExecutor, deviceListener)
+    audioManager.addOnCommunicationDeviceChangedListener(executor, deviceListener)
     communicationDeviceListener = deviceListener
     val focus = object : WindowFocusChangeListener {
       override fun onWindowFocusChange(hasFocus: Boolean) {
-        if (hasFocus) onRoutesChanged()
+        if (hasFocus) handler.post { onRoutesChanged() }
       }
     }
     reactApplicationContext.addWindowFocusChangeListener(focus)
@@ -165,9 +174,12 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   // Stops every observer when React Native tears the module down (for example on reload).
   // https://github.com/react/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/interfaces/TurboModule.kt#L15
   override fun invalidate() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) stopMediaPlayback()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stopCall()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) stopAudioRoute()
+    handler.post {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) stopMediaPlayback()
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stopCall()
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) stopAudioRoute()
+    }
+    thread.quitSafely()
     super.invalidate()
   }
 
@@ -178,15 +190,17 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       promise.reject("ERR_UNSUPPORTED", "$event is not supported on this device")
       return
     }
-    try {
-      when (event) {
-        EVENT_MEDIA_PLAYBACK -> startMediaPlayback()
-        EVENT_CALL -> startCall()
-        EVENT_AUDIO_ROUTE -> startAudioRoute()
+    handler.post {
+      try {
+        when (event) {
+          EVENT_MEDIA_PLAYBACK -> startMediaPlayback()
+          EVENT_CALL -> startCall()
+          EVENT_AUDIO_ROUTE -> startAudioRoute()
+        }
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("ERR_START_OBSERVING", "Could not start observing $event", e)
       }
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("ERR_START_OBSERVING", "Could not start observing $event", e)
     }
   }
 
@@ -196,15 +210,17 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
       promise.resolve(null)
       return
     }
-    try {
-      when (event) {
-        EVENT_MEDIA_PLAYBACK -> stopMediaPlayback()
-        EVENT_CALL -> stopCall()
-        EVENT_AUDIO_ROUTE -> stopAudioRoute()
+    handler.post {
+      try {
+        when (event) {
+          EVENT_MEDIA_PLAYBACK -> stopMediaPlayback()
+          EVENT_CALL -> stopCall()
+          EVENT_AUDIO_ROUTE -> stopAudioRoute()
+        }
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("ERR_STOP_OBSERVING", "Could not stop observing $event", e)
       }
-      promise.resolve(null)
-    } catch (e: Exception) {
-      promise.reject("ERR_STOP_OBSERVING", "Could not stop observing $event", e)
     }
   }
 
@@ -213,40 +229,46 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   }
 
   override fun isInCallAsync(promise: Promise) {
-    try {
-      if (!isEventSupported(EVENT_CALL, Build.VERSION.SDK_INT)) {
-        promise.reject("ERR_UNSUPPORTED", "isInCallAsync requires Android API 31+")
-        return
+    if (!isEventSupported(EVENT_CALL, Build.VERSION.SDK_INT)) {
+      promise.reject("ERR_UNSUPPORTED", "isInCallAsync requires Android API 31+")
+      return
+    }
+    handler.post {
+      try {
+        promise.resolve(callFromMode(audioManager.mode) == "connected")
+      } catch (e: Exception) {
+        promise.reject("ERR_IS_IN_CALL", "Could not read the call state", e)
       }
-      promise.resolve(callFromMode(audioManager.mode) == "connected")
-    } catch (e: Exception) {
-      promise.reject("ERR_IS_IN_CALL", "Could not read the call state", e)
     }
   }
 
   // Only reads; it does not change lastRoutes, so it never affects events.
   override fun getAudioRoutesAsync(promise: Promise) {
-    try {
-      if (!isEventSupported(EVENT_AUDIO_ROUTE, Build.VERSION.SDK_INT)) {
-        promise.reject("ERR_UNSUPPORTED", "getAudioRoutesAsync requires Android API 33+")
-        return
+    if (!isEventSupported(EVENT_AUDIO_ROUTE, Build.VERSION.SDK_INT)) {
+      promise.reject("ERR_UNSUPPORTED", "getAudioRoutesAsync requires Android API 33+")
+      return
+    }
+    handler.post {
+      try {
+        promise.resolve(Arguments.fromList(currentRoutes()))
+      } catch (e: Exception) {
+        promise.reject("ERR_GET_AUDIO_ROUTES", "Could not read the audio routes", e)
       }
-      promise.resolve(Arguments.fromList(currentRoutes()))
-    } catch (e: Exception) {
-      promise.reject("ERR_GET_AUDIO_ROUTES", "Could not read the audio routes", e)
     }
   }
 
   @SuppressLint("NewApi")
   override fun isMediaPlaybackActiveAsync(promise: Promise) {
-    try {
-      if (!isEventSupported(EVENT_MEDIA_PLAYBACK, Build.VERSION.SDK_INT)) {
-        promise.reject("ERR_UNSUPPORTED", "isMediaPlaybackActiveAsync requires Android API 26+")
-        return
+    if (!isEventSupported(EVENT_MEDIA_PLAYBACK, Build.VERSION.SDK_INT)) {
+      promise.reject("ERR_UNSUPPORTED", "isMediaPlaybackActiveAsync requires Android API 26+")
+      return
+    }
+    handler.post {
+      try {
+        promise.resolve(isMediaPlaybackActive(audioManager.activePlaybackConfigurations))
+      } catch (e: Exception) {
+        promise.reject("ERR_IS_MEDIA_PLAYBACK_ACTIVE", "Could not read the media playback state", e)
       }
-      promise.resolve(isMediaPlaybackActive(audioManager.activePlaybackConfigurations))
-    } catch (e: Exception) {
-      promise.reject("ERR_IS_MEDIA_PLAYBACK_ACTIVE", "Could not read the media playback state", e)
     }
   }
 
