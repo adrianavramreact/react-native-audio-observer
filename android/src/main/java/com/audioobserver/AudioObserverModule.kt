@@ -25,6 +25,8 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   private val thread = HandlerThread("com.audioobserver").apply { start() }
   private val handler = Handler(thread.looper)
   private val executor = Executor { handler.post(it) }
+  // Set first in invalidate(). Callbacks already queued still run after it, so they check it before emitting.
+  @Volatile private var invalidated = false
 
   private var lastMediaPlayback = false
   // Lazy because AudioPlaybackCallback needs API 26 and minSdk is 24: creating it
@@ -62,6 +64,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   @RequiresApi(Build.VERSION_CODES.O)
   private fun onPlayersChanged(configs: List<AudioPlaybackConfiguration>) {
+    if (invalidated) return
     val mediaPlayback = isMediaPlaybackActive(configs)
     if (mediaPlayback != lastMediaPlayback) {
       lastMediaPlayback = mediaPlayback
@@ -81,6 +84,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   }
 
   private fun onModeChanged(mode: Int) {
+    if (invalidated) return
     val call = callFromMode(mode) ?: return
     if (call == lastCall) return
     lastCall = call
@@ -89,12 +93,12 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   @RequiresApi(Build.VERSION_CODES.S)
   private fun startCall() {
-    lastCall = callFromMode(audioManager.mode) ?: "none"
     val listener = AudioManager.OnModeChangedListener { mode ->
       onModeChanged(mode)
     }
     audioManager.addOnModeChangedListener(executor, listener)
     modeListener = listener
+    lastCall = callFromMode(audioManager.mode) ?: "none"
   }
 
   @RequiresApi(Build.VERSION_CODES.S)
@@ -125,6 +129,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   }
 
   private fun onRoutesChanged() {
+    if (invalidated) return
     val routes = currentRoutes()
     if (routes == lastRoutes) return
     lastRoutes = routes
@@ -174,6 +179,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   // Stops every observer when React Native tears the module down (for example on reload).
   // https://github.com/react/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/interfaces/TurboModule.kt#L15
   override fun invalidate() {
+    invalidated = true
     handler.post {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) stopMediaPlayback()
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) stopCall()
