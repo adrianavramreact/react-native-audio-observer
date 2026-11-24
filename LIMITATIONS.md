@@ -4,13 +4,15 @@ Known platform limits of `react-native-audio-observer`. See `docs/DESIGN.md` for
 
 ## iOS
 
+- **No `mediaPlayback` on iOS.** iOS can't see your own app's audio, so this event is Android only. Use `otherAudio` ([ADR-006](docs/adr/006-other-audio-vs-media-playback.md)).
 - **iOS can keep the current audio output after another accessory connects.** In a device test, wired headphones remained active after Bluetooth headphones reconnected. `audioRoute` reflects the outputs active in the audio session. While media is playing, use **Control Center → Playback Destination** to check or change the active output. [Apple's playback destination guide](https://support.apple.com/guide/iphone/play-audio-iphone-a-bluetooth-accessory-iph01b6ea9a3/ios)
 - **Call audio support depends on the headphones and adapter.** Some third-party accessories support media playback only. Apple AirPods support iPhone calls. [AirPods calls](https://support.apple.com/guide/airpods/devac96438de/web)
 - **`otherAudio` updates only when the app comes back on screen.** The module never activates the audio session, so iOS sends no notice when another app starts or stops. The value is read with [`isOtherAudioPlaying`](https://developer.apple.com/documentation/avfaudio/avaudiosession/isotheraudioplaying) each time the app becomes active. To check at any moment, use `isOtherAudioPlayingAsync()`.
-- **`call` in the background is not reliable.** iOS freezes the app soon after it leaves the screen, and while it is frozen events may not arrive. To know if there is a call right now, use `isInCallAsync()`.
+- **`call` events from the background arrive late.** iOS freezes the app soon after it leaves the screen, and a call change made meanwhile arrives when the app comes back ([queued notifications](https://developer.apple.com/documentation/uikit/processing-queued-notifications)).
 
 ## Android
 
+- **No `otherAudio` on Android.** Android can't tell which app is playing, so this event is iOS only. Use `mediaPlayback` ([ADR-006](docs/adr/006-other-audio-vs-media-playback.md)).
 - **Below API 31: no `call` events.** The mode listener ([`addOnModeChangedListener`](https://developer.android.com/reference/android/media/AudioManager#addOnModeChangedListener(java.util.concurrent.Executor,%20android.media.AudioManager.OnModeChangedListener))) needs API 31. `isInCallAsync()` rejects with code `ERR_UNSUPPORTED`.
 - **Below API 26: no `mediaPlayback` events.** [`AudioPlaybackCallback`](https://developer.android.com/reference/android/media/AudioManager.AudioPlaybackCallback) and [`getActivePlaybackConfigurations`](https://developer.android.com/reference/android/media/AudioManager#getActivePlaybackConfigurations()) need API 26. `isMediaPlaybackActiveAsync()` rejects with code `ERR_UNSUPPORTED`.
 - **Below API 33: no `audioRoute` events.** [`getAudioDevicesForAttributes`](https://developer.android.com/reference/android/media/AudioManager#getAudioDevicesForAttributes(android.media.AudioAttributes)) needs API 33. `getAudioRoutesAsync()` rejects with code `ERR_UNSUPPORTED`.

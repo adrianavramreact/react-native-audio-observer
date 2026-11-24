@@ -72,6 +72,8 @@ Otherwise `stopped`. Notifications and UI sounds (`SONIFICATION`) are ignored. Y
 
 `getAudioRoutesAsync()` reads `AVAudioSession.currentRoute.outputs`. `audioRoute` fires only when the reported output types change. [Apple's audio route documentation](https://developer.apple.com/documentation/avfaudio/responding-to-audio-route-changes)
 
+Route changes made while the app is suspended are not lost: in device tests, iOS delivered them when the app came back, the way it does for [queued notifications](https://developer.apple.com/documentation/uikit/processing-queued-notifications).
+
 **Quick test on iPhone**
 
 1. Open the example app. While media is playing, plug in or unplug wired headphones, or connect or disconnect Bluetooth headphones. Use **Control Center → Playback Destination** to check the active output. You can also switch to another available output there. [Apple's playback destination guide](https://support.apple.com/guide/iphone/play-audio-iphone-a-bluetooth-accessory-iph01b6ea9a3/ios)

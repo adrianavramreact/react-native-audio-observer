@@ -55,6 +55,10 @@ useEffect(() => {
 
 Calling `remove()` more than once is safe.
 
+Not every event exists on every platform and API level (see [`LIMITATIONS.md`](LIMITATIONS.md)), so check `isAvailableAsync()` before `addListener`. If the listener can't receive events (the event isn't available, or the system refused to start observing it), the module logs a warning. To handle the error yourself instead, for example to send it to Sentry, pass `onError`: `addListener('call', onCall, { onError: (e) => Sentry.captureException(e) })`.
+
+Each event also has a function that reads the current state once, with or without a listener: `isInCallAsync()`, `getAudioRoutesAsync()`, `isOtherAudioPlayingAsync()` (iOS) and `isMediaPlaybackActiveAsync()` (Android).
+
 > **Order matters.** Events are emitted only when the state changes, never for the initial state. To miss nothing, add the listener first and read the initial state after it (for example `isInCallAsync()` or `getAudioRoutesAsync()`). Reading it before `addListener` leaves a gap where a change is lost.
 
 > **Never interrupts playback.** The module only observes: it never requests audio focus on Android and never activates the audio session on iOS, so it never pauses or ducks any app.
