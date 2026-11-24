@@ -10,13 +10,11 @@ import UIKit
   private let notificationQueue = OperationQueue()
 
   private var routeObserver: NSObjectProtocol?
-  private var routeActiveObserver: NSObjectProtocol?
   private var lastRoutes: [String] = []
 
   // Lazy so it is created only when call state is first used.
   private lazy var callObserver = CXCallObserver()
   private var isObservingCalls = false
-  private var callActiveObserver: NSObjectProtocol?
   private var lastCall = "none"
 
   private var otherAudioObserver: NSObjectProtocol?
@@ -98,18 +96,10 @@ import UIKit
     }
   }
 
-  // iOS pauses the app soon after it leaves the screen, so the route is also read again when the app comes back.
   private func startAudioRoute() {
     guard routeObserver == nil else { return }
     routeObserver = NotificationCenter.default.addObserver(
       forName: AVAudioSession.routeChangeNotification,
-      object: nil,
-      queue: notificationQueue
-    ) { [weak self] _ in
-      self?.onRouteChanged()
-    }
-    routeActiveObserver = NotificationCenter.default.addObserver(
-      forName: UIApplication.didBecomeActiveNotification,
       object: nil,
       queue: notificationQueue
     ) { [weak self] _ in
@@ -123,10 +113,6 @@ import UIKit
       NotificationCenter.default.removeObserver(routeObserver)
     }
     routeObserver = nil
-    if let routeActiveObserver {
-      NotificationCenter.default.removeObserver(routeActiveObserver)
-    }
-    routeActiveObserver = nil
   }
 
   private func onRouteChanged() {
@@ -137,17 +123,9 @@ import UIKit
   }
 
   // Subscribe first, then read the state, so no call change is missed in between.
-  // iOS pauses the app in the background and call changes can get lost, so we check again when the app comes back.
   private func startCall() {
     guard !isObservingCalls else { return }
     callObserver.setDelegate(self, queue: queue)
-    callActiveObserver = NotificationCenter.default.addObserver(
-      forName: UIApplication.didBecomeActiveNotification,
-      object: nil,
-      queue: notificationQueue
-    ) { [weak self] _ in
-      self?.onCallChanged()
-    }
     isObservingCalls = true
     lastCall = currentCall()
   }
@@ -155,10 +133,6 @@ import UIKit
   private func stopCall() {
     guard isObservingCalls else { return }
     callObserver.setDelegate(nil, queue: nil)
-    if let callActiveObserver {
-      NotificationCenter.default.removeObserver(callActiveObserver)
-    }
-    callActiveObserver = nil
     isObservingCalls = false
   }
 
