@@ -93,6 +93,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
 
   @RequiresApi(Build.VERSION_CODES.S)
   private fun startCall() {
+    if (modeListener != null) return
     val listener = AudioManager.OnModeChangedListener { mode ->
       onModeChanged(mode)
     }
@@ -148,6 +149,7 @@ class AudioObserverModule(reactContext: ReactApplicationContext) :
   //   Android has no public listener for a media output switch, so it is caught here.
   @RequiresApi(Build.VERSION_CODES.TIRAMISU)
   private fun startAudioRoute() {
+    if (routeModeListener != null) return
     lastRoutes = currentRoutes()
     audioManager.registerAudioDeviceCallback(deviceCallback, handler)
     val listener = AudioManager.OnModeChangedListener { onRoutesChanged() }
