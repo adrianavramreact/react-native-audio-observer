@@ -80,6 +80,26 @@ it('two listeners on the same event have separate subscriptions', () => {
   expect(subB.remove).toHaveBeenCalledTimes(1);
 });
 
+it('retries start after a failed start and reports it to onError', async () => {
+  const error = new Error('boom');
+  jest
+    .mocked(NativeAudioObserver.startObservingAsync)
+    .mockRejectedValueOnce(error);
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  const onError = jest.fn();
+
+  const a = addListener('audioRoute', () => {}, { onError });
+  await new Promise((resolve) => setTimeout(resolve, 0)); // let the catch run
+  const b = addListener('audioRoute', () => {});
+
+  expect(NativeAudioObserver.startObservingAsync).toHaveBeenCalledTimes(2);
+  expect(onError).toHaveBeenCalledWith(error);
+  expect(warn).not.toHaveBeenCalled();
+  a.remove();
+  b.remove();
+  warn.mockRestore();
+});
+
 it('isAvailableAsync forwards the event name', async () => {
   await expect(AudioObserver.isAvailableAsync('call')).resolves.toBe(true);
   expect(NativeAudioObserver.isAvailableAsync).toHaveBeenCalledWith('call');

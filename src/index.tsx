@@ -23,8 +23,18 @@ type EventMap = {
   // Android only: any media playing, your app's included.
   mediaPlayback: MediaPlaybackEvent;
 };
+export type ListenerOptions = {
+  /**
+   * Called when the listener can't receive events, for example when the event isn't
+   * available on this platform or the system refused to start observing it.
+   * Also called if stopping fails. Replaces the default console.warn.
+   */
+  onError?: (error: unknown) => void;
+};
 // Number of active listeners per event. Native observing runs only while it is > 0.
 const counts: Partial<Record<keyof EventMap, number>> = {};
+// Whether native observing is running. Reset on failure so the next addListener retries.
+const started: Partial<Record<keyof EventMap, boolean>> = {};
 
 /**
  * Events are emitted only when the state changes, never for the initial state.
@@ -34,16 +44,26 @@ const counts: Partial<Record<keyof EventMap, number>> = {};
  */
 export function addListener<K extends keyof EventMap>(
   eventName: K,
-  listener: (event: EventMap[K]) => void
+  listener: (event: EventMap[K]) => void,
+  options?: ListenerOptions
 ): EventSubscription {
   const subscription = subscribe(eventName, listener);
   const count = counts[eventName] ?? 0;
-  if (count === 0) {
+  if (!started[eventName]) {
+    started[eventName] = true;
     (async () => {
       try {
         await NativeAudioObserver.startObservingAsync(eventName);
       } catch (e) {
-        console.warn(`startObservingAsync('${eventName}') failed`, e);
+        started[eventName] = false;
+        if (options?.onError) {
+          options.onError(e);
+        } else {
+          console.warn(
+            `[react-native-audio-observer] startObservingAsync('${eventName}') failed`,
+            e
+          );
+        }
       }
     })();
   }
@@ -57,12 +77,20 @@ export function addListener<K extends keyof EventMap>(
       subscription.remove();
       const left = counts[eventName]! - 1;
       counts[eventName] = left;
-      if (left === 0) {
+      if (left === 0 && started[eventName]) {
+        started[eventName] = false;
         (async () => {
           try {
             await NativeAudioObserver.stopObservingAsync(eventName);
           } catch (e) {
-            console.warn(`stopObservingAsync('${eventName}') failed`, e);
+            if (options?.onError) {
+              options.onError(e);
+            } else {
+              console.warn(
+                `[react-native-audio-observer] stopObservingAsync('${eventName}') failed`,
+                e
+              );
+            }
           }
         })();
       }
