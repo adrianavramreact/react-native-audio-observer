@@ -15,13 +15,14 @@ Reply briefly, in the user's preferred language. Do nothing irreversible without
 ## 2. Checks on staged files (`git diff --cached --name-only`)
 Stop and report if you find:
 - **Personal/ignored files**: `LEARNING.md`, `.DS_Store`, `node_modules/`, `.claude/settings.local.json`.
-- **Secrets**: `.env*`, `*.pem`, `*.p12`, `*.keystore`, `*.jks`, `google-services.json`, `GoogleService-Info.plist`, or in the diff: `git diff --cached | grep -nEi '(api[_-]?key|secret|token|password|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY|AKIA[0-9A-Z]{16})'`.
+- **Secrets**: `.env*`, `*.pem`, `*.p12`, `*.keystore`, `*.jks`, `google-services.json`, `GoogleService-Info.plist`, or in the diff: `git diff --cached -U0 -- . ':!yarn.lock' | grep -E '^\+' | grep -nEi '(api[_-]?key|secret|token|password|BEGIN (RSA|EC|OPENSSH) PRIVATE KEY|AKIA[0-9A-Z]{16})'`.
 - **Large files** (> 1 MB) or build output (`build/`, `Pods/`, `.gradle/`, `DerivedData/`, `*.apk`, `*.ipa`).
 - **Personal data** in code/tests: real phone numbers, emails (the package collects no data – see CLAUDE.md).
 - **Conflict markers** (`<<<<<<<`, `>>>>>>>`) and leftover `console.log`/`debugger`.
 
 ## 3. Project checks (only if they exist)
 - `package.json` → run the existing scripts among `lint`, `typecheck`, `test`.
+- `android/` changed → `yarn test:android`. `ios/` changed → `yarn test:ios`. CI does not run them.
 - If none exist, say so in one line; do not invent commands.
 - If a check fails: show the output and stop.
 
@@ -30,7 +31,7 @@ Stop and report if you find:
 - Body: 1–2 short lines in plain everyday English, *what* and *why* only.
   No technical detail (queues, threads, API names) unless it is the point of the change.
   Example: "From iOS 27 it needs a second code path, and iOS 26 can't be retested on a real iPhone after the upgrade."
-- If the change is user-visible, mention `CHANGELOG.md`; if it is an architecture decision, mention `docs/adr/`.
+- If the change is an architecture decision, mention `docs/adr/`.
 - End with the attribution line required by the session (e.g. `Co-Authored-By: ...`).
 
 ## 5. Confirm and commit
@@ -40,4 +41,5 @@ Stop and report if you find:
 
 ## Never
 - `git push`, `--force`, `--no-verify`, `--amend` on existing commits, `git reset --hard`, `git config` — unless the user explicitly asks.
-- Commit with failing checks or unresolved issues from step 2.
+- Commit with failing checks.
+- Commit with unresolved issues from step 2. A match the user confirms as a false positive counts as resolved.
