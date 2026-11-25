@@ -1,4 +1,4 @@
-# ADR-003: Never read phone numbers, contacts or call logs
+# ADR-002: Never read phone numbers, contacts or call logs
 
 - Status: Accepted
 - Date: 2026-10-09
@@ -12,7 +12,7 @@ The `call` event only needs to know that a call is ringing, connected or ended. 
 
 ## Decision
 
-The module never reads phone numbers, contacts or call logs, and never requests `READ_CALL_LOG` or `READ_CONTACTS`. `READ_PHONE_STATE` is not requested in the first release (ADR-002).
+The module never reads phone numbers, contacts or call logs, and never requests `READ_CALL_LOG` or `READ_CONTACTS`.
 
 ## Consequences
 
