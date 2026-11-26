@@ -35,7 +35,8 @@ it('checkAvailable lists every event', async () => {
   );
   await expect(checkAvailable()).resolves.toEqual({
     title: 'isAvailable',
-    message: 'call: true, otherAudio: true, mediaPlayback: false',
+    message:
+      'call: true\naudioRoute: true\notherAudio: true\nmediaPlayback: false',
   });
 });
 

@@ -15,14 +15,15 @@ const toErrorResult = (e: unknown): CheckResult => {
 
 export const checkAvailable = async (): Promise<CheckResult> => {
   try {
-    const [call, otherAudio, mediaPlayback] = await Promise.all([
+    const [call, audioRoute, otherAudio, mediaPlayback] = await Promise.all([
       AudioObserver.isAvailableAsync('call'),
+      AudioObserver.isAvailableAsync('audioRoute'),
       AudioObserver.isAvailableAsync('otherAudio'),
       AudioObserver.isAvailableAsync('mediaPlayback'),
     ]);
     return {
       title: CHECK_TITLE.isAvailable,
-      message: `call: ${call}, otherAudio: ${otherAudio}, mediaPlayback: ${mediaPlayback}`,
+      message: `call: ${call}\naudioRoute: ${audioRoute}\notherAudio: ${otherAudio}\nmediaPlayback: ${mediaPlayback}`,
     };
   } catch (e) {
     return toErrorResult(e);
