@@ -20,6 +20,7 @@
     "cpp",
     "*.podspec",
     "react-native.config.js",
+    "CHANGELOG.md",
     "!ios/build",
     "!android/build",
     "!android/gradle",
@@ -45,7 +46,14 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "turbo-module",
+    "call-detection",
+    "phone-call",
+    "audio-route",
+    "headphones",
+    "bluetooth",
+    "anti-fraud"
   ],
   "repository": {
     "type": "git",
